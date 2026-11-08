@@ -1,0 +1,266 @@
+NumPy and Pandas: From Arrays to Real Data
+Week 2, Day 2 Notebook
+
+---
+
+One file, `class_scores.csv`, a class of 12 students with their subject, score, and attendance, is used for every single example today, from the first cell to the last. Every concept follows the same shape as yesterday, the plain idea first, then a direct comparison against the plain Python way of doing the same thing, then the most common mistake, then real use.
+
+Run every cell in order, top to bottom.
+
+Instructor: Aimal Khan
+
+## 1. The Problem: Real Data Lives in Files
+
+Yesterday every value was typed directly into the code. Real data almost never works that way, it sits in a file on disk, usually a CSV, comma-separated values, one row per line, one comma between each column.
+
+Let's try to read `class_scores.csv` using only what we already know, `open()`, `.split(",")`, and a loop.
+
+That technically worked, but look closely at what we actually got, everything is text, even the scores. Let's try to compute the average score the way we would with any list from yesterday.
+
+The Real Problem: That worked, but notice everything we had to do by hand: skip the header ourselves, split every line ourselves, convert every value ourselves, and if even one row were missing a value or formatted slightly differently, this would crash. Real datasets have thousands of rows and dozens of columns. This section stays unfinished on purpose, we are coming back to it properly in Section 9, once we have the right tools.
+
+## 2. What Is a Library, and What Does import Actually Do?
+
+A library is pre-written, tested code that someone else already built, so you can reuse it instead of writing everything from scratch. `import` loads a library into your notebook so you can use it.
+
+NumPy and Pandas are both already installed on Kaggle, nothing to set up, just import them.
+
+`as np` and `as pd` are conventions, not requirements, followed almost everywhere, in tutorials, in job code, in documentation. They give the library a shorter nickname, so instead of writing the full word every time, you write the short version instead:
+
+| Without a nickname | With `as np` |
+|---|---|
+| `numpy.array([1, 2, 3])` | `np.array([1, 2, 3])` |
+| `numpy.mean(scores)` | `np.mean(scores)` |
+
+Both lines in each row do the exact same thing, same function, same result. The only difference is how much you type. From here on, every NumPy function in this notebook will be written the short way, `np.something`.
+
+## What Is NumPy, Specifically?
+
+NumPy stands for Numerical Python. It is a library built for fast math on large amounts of numbers at once, arrays and grids of numbers specifically, rather than one value at a time.
+
+**Why we need it**: a plain Python list was never built for math. Adding two lists together concatenates them, not what you want mathematically, and Python has to check the type of every single value one at a time as it works, which is slow once you have thousands or millions of numbers. NumPy is written underneath in C, a much faster language, so the same operation across a huge array runs dramatically faster than a Python loop ever could.
+
+**What it can do**: create and reshape arrays of any dimension, run math across an entire array at once with no loop, compute statistics like mean and standard deviation instantly, and perform real matrix and linear algebra operations. It is also the foundation almost every other data and AI library in Python is built on top of, Pandas, scikit-learn, TensorFlow, and PyTorch all store their data as NumPy arrays underneath, even when you never see NumPy directly.
+
+## 3. What Is an Array?
+
+An array is a grid of values that must all be the same type. This is different from a list, which happily mixes types.
+
+### What happens if we try that with an array?
+
+Every value became a `float64`, including the whole numbers. NumPy did not complain, it silently converted everything to whichever type can represent all of them. Let's push this further.
+
+Key Insight: Notice 1 and 2 are now the text '1' and '2', not numbers. Mixing a string into an array converts everything to text, silently, with no error. This is exactly why arrays are fast, the computer can lay same-type, fixed-size values out in one tight block of memory, the same offset-based idea behind indexing from Day 1, but it means you must be deliberate about what you put into one.
+
+## 4. NumPy Arrays: Creation
+
+### Building an array from a list
+
+`scores_array` prints without commas between the numbers, that is how you tell an array apart from a list at a glance. `type()` confirms it directly, `numpy.ndarray`, n-dimensional array, NumPy's actual name for an array.
+
+### The single most common trip-up moving from lists to arrays
+
+`+` means something completely different for each one.
+
+A list glued the two together, six items. An array added position by position, three items. This single difference explains most early NumPy confusion, `+` on a list concatenates, `+` on an array does real math.
+
+### A second contrast: comparing values
+
+This difference shows up again with comparison operators.
+
+A list has no idea what "greater than 2" even means for a whole collection, so it fails outright. An array checks every position and hands back `True` or `False` for each one. This exact behavior is what makes filtering real data possible, and we will use it again the moment we reach Pandas.
+
+## 5. Indexing and Slicing 2D Arrays
+
+Same 0-based indexing from Day 1, now with two dimensions, rows and columns.
+
+`Shape: (2, 3)` reads as 2 rows, 3 columns, always rows first, then columns. Two students, three scores each, printed as a grid instead of two separate lists.
+
+### Accessing one value: [row, column]
+
+`grades[0, 0]` is 78, the value in the first row, first column. `grades[1, 2]` is 73, second row, third column. The rule is always the same order, row first, then column, matching how the shape itself was printed.
+
+### Accessing a whole row or column
+
+`grades[0]` with only one index returns the entire first row, all three of that student's scores. `grades[:, 1]` reads as every row, `:`, but only column 1, giving you the second score from each student instead, 92 and 45. The `:` means, give me everything along this dimension.
+
+### Slicing, just like a list, but in two dimensions
+
+This keeps rows 0 up to, but not including, 2, and columns 0 up to, but not including, 2, giving back a smaller 2 by 2 grid cut from the top-left corner of the original.
+
+## 6. Operations and Broadcasting
+
+### The old way vs the array way
+
+Recall computing an average manually in Section 1, a loop, a running total, then dividing.
+
+Same answer, one line instead of four, and no loop to get wrong. NumPy provides these for free.
+
+Sum, max, and min are self-explanatory, the total, the highest, and the lowest score. Standard deviation is the least obvious, it measures how spread out the scores are from the average, a small number means most scores sit close together, a large number means they are scattered widely. You will use this exact statistic again in Section 8.
+
+### Broadcasting: applying one operation to every value at once
+
+Every score went up by exactly 5, `[78, 92, 65, 88, 45]` became `[83, 97, 70, 93, 50]`. The single number `5` was stretched to apply to every position in the array, this stretching is what the word broadcasting actually means.
+
+### Broadcasting a row across a whole 2D grid
+
+`row_bonus` has only 3 values, one per column, but `grades_2d` has 2 rows. NumPy stretched `row_bonus` down to match both rows, so the first score in every row gets +5, the second gets +0, and the third gets +10. Read the result column by column to see it, column 0 went up by 5 in both rows, column 2 went up by 10 in both rows.
+
+### The most common broadcasting error
+
+`ValueError`, operands could not be broadcast together, the shapes `(3,)` and `(2,)` do not match, and NumPy has no rule for combining them. Broadcasting only works when shapes are equal, or when one side is a single value or a row that can stretch cleanly to fit, `3` and `2` do neither.
+
+## 7. Reshaping and Matrix Multiplication
+
+### Reshaping: the same data, a different shape
+
+Walk through exactly what happened. `flat` starts as one row of 6 numbers, shape `(6,)`. `reshape(2, 3)` takes those same 6 numbers, in the same order, and lays them into a new grid, 2 rows, 3 columns, without changing a single value, `1, 2, 3` becomes row 0, `4, 5, 6` becomes row 1. `grid.shape` confirms it, `(2, 3)`. Reshape only rearranges, it never adds, removes, or changes a value, which is exactly why the new shape must multiply out to the same total count, 2 times 3 is 6, matching the original 6 numbers exactly.
+
+### The most common reshape error
+
+`ValueError`, cannot reshape an array of 5 items into a shape of 4, 2 times 2. The new shape must hold exactly the same number of values as the original, 5 items can never fill a 2 by 2 grid, which only has room for 4.
+
+### * vs @: elementwise multiplication is not matrix multiplication
+
+`*` simply multiplies each position by the matching position, position by position, top-left times top-left, `1 * 5 = 5`, and so on, giving `[[5, 12], [21, 32]]`. `@` is real matrix multiplication, a completely different calculation, each result value comes from multiplying an entire row of `m1` against an entire column of `m2` and adding those products together, the top-left result, 19, comes from `(1*5) + (2*7)`, not from `1*5` alone. This is the operation neural networks actually run constantly, layer after layer, which is why the distinction matters here specifically, and not just as a math curiosity.
+
+Real Use Case: Images Are Arrays: A black and white image is a 2D array, one number per pixel, its brightness. A color image is a 3D array, height by width by 3, one layer each for red, green, and blue. Every Computer Vision system from Week 1 starts here, an image is not a special format, it is just a NumPy array with a particular shape.
+
+### How does this actually get fed into a model?
+
+This is the part that is usually left as a mystery. An AI model has no idea what a JPEG or PNG file is, it only understands numbers. Loading an image for a model always follows the same pipeline.
+
+Step 1 is exactly what a library like OpenCV or Pillow does when you load a photo, it never hands you a picture, it hands you an array like this one, just far larger, a real photo might be `1080 x 1920 x 3`, over 6 million numbers. Step 2 is the same normalization idea from the mini-capstone coming up next, models train more reliably when every input sits in a small, consistent range instead of raw values from 0 to 255. That normalized array is the actual input a model receives, there is no image involved from the model's point of view, only a grid of numbers, exactly like the ones you have been working with all section.
+
+## 8. NumPy Mini-Capstone
+
+Pull the Math scores from `class_scores.csv` (still by hand, Pandas is coming next), and answer three questions using only what this section covered.
+
+That last step, subtracting the mean and dividing by the standard deviation, is called normalization, putting every value on the same scale. You will see this exact line again later in this course, it is one of the most common preprocessing steps before training a model.
+
+## 9. Back to the Problem: What Is Pandas?
+
+Recall Section 1, reading a CSV by hand meant manually skipping the header, splitting every line, and converting every value ourselves.
+
+Pandas is a library built on top of NumPy, for working with tabular data, rows and columns, like a spreadsheet inside Python.
+
+**Why we use it**: real data almost never arrives as clean numbers. It arrives in files, with mixed types, missing values, and labeled columns. Pandas handles all of that in far less code than plain Python.
+
+**When we use it**: any time data is tabular, CSV files, Excel files, database query results, log files.
+
+Let's finally finish Section 1 properly.
+
+Key Insight: One line replaced the entire manual reading process from Section 1, header handling, splitting, and type conversion, all done automatically. This is the payoff for everything covered today so far, DataFrames are built on NumPy arrays underneath, so everything from mean() to boolean filtering carries over directly.
+
+## 10. DataFrame Basics
+
+### Quick orientation
+
+`.head()` shows only the first 5 rows by default, not the whole dataset, useful for a quick look without flooding the screen when a real dataset has thousands of rows.
+
+`(12, 4)` means 12 rows, 4 columns, the same `(rows, columns)` order as a NumPy array's shape. `.columns` lists the 4 column names directly, `student_name`, `subject`, `score`, `attendance`.
+
+`.info()` is the most useful single command for getting oriented in a new dataset. Read it column by column, each line shows the column's name, how many non-null, meaning present, not missing, values it has, and its data type. Notice `attendance` shows only 10 non-null out of 12 rows, that is the two missing values from `class_scores.csv`, already visible before we even look for them directly.
+
+### Selecting one column vs several
+
+This distinction trips people up constantly.
+
+Single brackets with one column name give you a `Series`, a single labeled column. Double brackets, a list of column names inside the selection, give you back a full `DataFrame`, even if it is only one column wide. The difference matters, a `DataFrame` supports `.head()` and other DataFrame-only tools, a plain `Series` does not always behave the same way.
+
+### .iloc vs .loc
+
+Both select rows, but by different rules. `.iloc` means integer location, purely by position, the 1st row, the 2nd row, counting from 0, exactly like list indexing from Day 1. `.loc` means location by label, it looks for a row whose index label matches what you ask for, which is not always the same thing as its position.
+
+Right now, with the default index, `iloc[0]` and `loc[0]` happen to return the same row, Ali. That is a coincidence of the default index being plain 0, 1, 2, in order, not a rule. Keep reading, Section 12 sorts this same dataframe, and the two stop matching immediately.
+
+## 11. What Is Data Manipulation? Filtering Rows
+
+Data manipulation is the general term for cleaning, filtering, transforming, and summarizing data so it is actually usable for whatever comes next, a report, a chart, or a model.
+
+### The old way vs the Pandas way
+
+Recall filtering with a loop and a conditional from Day 1.
+
+### Now the Pandas way, boolean masking
+
+Same result, no loop. `df["score"] >= 75` produces a column of `True`/`False` values, exactly like the array comparison from Section 4, and `df[...]` keeps only the rows marked `True`.
+
+### Combining conditions: & and |, not and / or
+
+Two conditions, both wrapped in their own parentheses, joined by `&`, meaning both must be true. Out of 5 Math students, only 3 scored 75 or above, Ali, Sara, and Usman, so only those 3 rows survive the filter, Hamza and Fahad are Math students too, but their scores fall below 75, so they are dropped.
+
+Careful: Day 1's and / or do not work row by row on a whole column, only & and | do, and every condition needs its own parentheses, exactly as shown above. This is one of the most common Pandas mistakes for anyone coming from plain Python conditionals.
+
+## 12. Adding a Computed Column, and Sorting
+
+### What is lambda?
+
+Before using `.apply()`, one new piece of syntax needs explaining, `lambda`. Recall a normal function from Day 1.
+
+`lambda` writes that exact same idea in one line, with no name, and no `def`. It exists for small functions you only need once, right where you use them, rather than defining separately ahead of time.
+
+Same result both ways. `lambda s: ...` means, take one input, call it `s`, and hand back whatever comes after the colon, no `return` keyword needed, a lambda always returns automatically. In practice, a lambda is almost never saved to a variable like the cell above, it is written directly inside another function that needs one, exactly like `.apply()` below.
+
+### A computed column, the same logic as Day 1's grade checker
+
+`.apply()` runs that small lambda function on every value in the `score` column, one at a time, and the result becomes the new `pass_fail` column. This is the Pandas equivalent of looping through a list and checking a condition on each item, just without writing the loop yourself, `s` inside the lambda is simply whatever that row's score happens to be as `.apply()` works down the column.
+
+### Sorting
+
+`ascending=False` means largest to smallest, top score first. Sorting is `ascending=True` by default, smallest to largest, so `ascending=False` explicitly flips that order.
+
+The dataframe itself, `df`, is unchanged, `sort_values` returns a new, reordered copy, `sorted_df`. With `ascending=False`, Sara's 92 now sits at the top and Hamza's 45 at the bottom, but look closely at the numbers printed on the left, they are no longer 0, 1, 2, 3 in order. Sara's row still carries the label 1, the same label she had in the original `df`, only her position in this new printout changed.
+
+### Now .iloc and .loc actually differ
+
+This is exactly the case Section 10 promised. `sorted_df`'s labels are scrambled, so position and label are no longer the same thing.
+
+`iloc[0]` returns Sara, she is physically sitting in the first position after sorting, position always wins for `iloc`, no matter what label she carries. `loc[0]` returns Ali, the row still labeled 0 from the original, unsorted dataframe, `loc` does not care where a row currently sits, only what label it carries. Same dataframe, same `[0]`, two completely different students. This is exactly why the distinction matters in practice, not just in theory.
+
+## 13. Missing Data
+
+Look back at `class_scores.csv`, two students have no attendance value. Pandas represents a missing value as `NaN`, Not a Number.
+
+One line of output per column, the number is how many missing values that column has. Every column shows 0 except `attendance`, which shows 2, matching the two blank cells in the original CSV. This is worth running on any new dataset before doing anything else with it.
+
+### What happens if we compute an average with missing values in the mix?
+
+Key Insight: Pandas silently skipped the missing values and averaged only the students who had one, no error, no crash. That is convenient, but also easy to miss, always check isnull().sum() first so you know how much data is actually missing before trusting an average.
+
+### Two ways to handle it: dropna vs fillna
+
+Compare this to the original data, Bilal and Zara had blank attendance before. Now both show the same decimal number, the column's average, computed from the 10 students who did have a value. Every row is still present, 12 total, nothing was dropped, unlike the `dropna` version above which lost 2 rows entirely.
+
+`dropna` removes rows with a missing value, use it when you can afford to lose those rows. `fillna` replaces the missing value instead, often with the column's average, use it when every row matters and losing students from the dataset would bias your results.
+
+## 14. Grouping and Aggregating
+
+Answer a question like: what is the average score per subject, without writing a single loop.
+
+All 12 students collapsed down into just 2 rows, one per subject, because every Math student's score was averaged together, and separately every Science student's score was averaged together. This is the same idea as the manual filter-then-average pattern from Section 11, done twice by hand, once per subject, except `groupby` does both in a single line, and would do the same for 50 subjects just as easily.
+
+`.groupby("subject")` splits the whole dataframe into one group per subject, computes the average within each group separately, then hands back one row per subject. This single line replaces what would otherwise be a loop over subjects, a filter for each one, and a manual average for each filtered group.
+
+## 15. One More Common Error, and the Recap
+
+### The most common Pandas error
+
+`KeyError`, the exact same error type from Day 1's dictionaries, for the exact same reason, asking for a key, here a column name, that does not exist. A typo in a column name is the single most common Pandas mistake, and Pandas will not guess what you meant.
+
+## Key Terms Recap
+
+| Term | One-Line Definition |
+|---|---|
+| Library | Pre-written, tested code you reuse instead of writing from scratch |
+| Array | A grid of values that must all be the same type |
+| Broadcasting | Applying one operation across every value in an array at once |
+| Reshape | Rearranging the same data into a different shape |
+| DataFrame | A Pandas table of rows and columns, like a spreadsheet |
+| Series | A single labeled column from a DataFrame |
+| Data manipulation | Cleaning, filtering, transforming, and summarizing data |
+| Boolean masking | Filtering rows using a column of True/False values |
+| NaN | Pandas' representation of a missing value |
+| groupby | Splitting a DataFrame into groups and computing something per group |
+
+Coming Up Next: Week 2, Day 3 uses this exact class_scores.csv one more time, feeding it into scikit-learn to train and evaluate a real model, framed the same way the certification exam's Lab component works.

@@ -1,0 +1,377 @@
+AI Fundamentals
+History, Types & the Global
+Landscape
+Day 1, Concept Guide
+
+Before you write a line of code or open a single Huawei Cloud service, you need the vocabulary.
+What actually counts as AI? Where did it come from? And why is nearly every major company on
+earth racing to adopt it right now? Today answers all three, and gives you the shared language the
+rest of this course builds on.
+
+1. What Is Artificial Intelligence?
+Artificial Intelligence is the ability of a machine to perform tasks that normally require human
+intelligence, such as recognizing patterns, making decisions, or understanding language. Not every
+automated system is AI; a system only counts as AI when it can adapt its output based on data or
+experience, rather than following one fixed set of instructions.
+Type
+
+What It Means
+
+Real Example
+
+Weak AI (Narrow AI)
+
+Designed for one specific task only
+
+Google Translate, a spam
+filter
+
+Strong AI (hypothetical)
+
+Would have true understanding and
+consciousness comparable to a human
+mind
+
+Does not exist yet; mostly
+discussed in theory and
+fiction
+
+General AI (AGI)
+
+A system that could perform any
+intellectual task a human can
+
+Still a research goal, not yet
+achieved
+
+Key Insight
+Every AI system you will use in this course, including Huawei's ModelArts and Cloud EI
+services, is Weak or Narrow AI. It is extremely good at one job and knows nothing outside it.
+
+There is a second, equally important axis: how AI relates to Machine Learning and Deep Learning.
+These are not three separate fields, they are nested inside each other.
+Term
+
+What It Actually Is
+
+Example
+
+Artificial Intelligence (AI)
+
+The broad field: any system designed to
+behave intelligently
+
+A game character that reacts
+differently depending on
+how you play
+
+Machine Learning (ML)
+
+A subset of AI: systems that learn patterns
+from data instead of following fixed rules
+
+Netflix recommending shows
+based on your watch history
+
+Deep Learning (DL)
+
+A subset of ML: uses layered neural
+networks, and powers most of today's
+headline AI
+
+Face ID unlocking your
+phone by recognizing your
+face
+
+2. A Brief History of AI
+AI is not new. The field has gone through cycles of hype, disappointment, and breakthrough for over
+70 years.
+Year
+
+Milestone
+
+Alan Turing proposes the Turing Test to measure machine intelligence
+
+The term Artificial Intelligence is coined at the Dartmouth Conference
+
+1970s to 1980s
+
+The first AI Winter; funding dries up as early promises go unmet
+
+IBM's Deep Blue defeats world chess champion Garry Kasparov
+
+A deep learning breakthrough (AlexNet) revives the field using neural
+
+networks
+2020s
+
+Generative AI and Large Language Models go mainstream worldwide
+
+The AI Winter was not caused by bad ideas, it was caused by broken promises. Researchers in the
+1960s predicted human-level AI within a generation, and when the hardware and data of the time
+could not deliver, funding dried up almost overnight.
+2012 matters for a reason that often gets skipped. The AlexNet breakthrough was not a smarter
+algorithm, it was the same neural network ideas from decades earlier, finally paired with GPU
+hardware powerful enough to train them. Old ideas unlocked by new hardware is a pattern worth
+remembering whenever you hear bold claims about today's AI wave.
+
+3. Symbolic AI vs Machine Learning AI
+There are two fundamentally different ways to build an AI system. Understanding the difference
+explains almost everything about why modern AI, including Huawei's platforms, is built the way it is.
+Symbolic AI
+
+Machine Learning AI
+
+A programmer writes fixed, hard-coded rules.
+Example: for spam detection, a rule might say, if
+an email contains the phrase free money, mark it
+as spam.
+
+A model is shown thousands of labeled emails
+and learns spam patterns on its own, without
+anyone writing explicit rules.
+
+Key Insight
+Symbolic AI follows rules a human wrote. Machine learning AI finds its own rules from data.
+Nearly everything in this course, including Huawei ModelArts, belongs to the machine learning
+side.
+
+The stakes get much higher outside of spam filters. Picture a bank deciding loan approvals. A
+symbolic system uses a written rule, such as deny if income is below a set threshold, so you can
+always point to exactly why someone was rejected. A machine learning system learns the pattern
+from thousands of past loans, which can be more accurate, but far harder to explain to a rejected
+applicant, or to a regulator asking why. This tradeoff, accuracy versus explainability, comes up
+constantly in real AI deployments.
+
+4. Key Domains of AI
+AI is not one single technology. It splits into domains, each solving a different kind of problem, and
+each domain keeps expanding as the field matures. The map below shows where the field stands
+today.
+
+The six domains covered in this course, radiating from the core field of AI.
+
+Computer Vision
+Teaches machines to interpret images and video. Two common use cases: security systems using
+face detection to grant building access, and manufacturing lines using automated defect inspection
+to flag faulty products on a conveyor belt. Maps to Huawei Cloud EI's Image and Video services.
+
+Natural Language Processing (NLP)
+Teaches machines to understand and generate human language. Two common use cases: customer
+service chatbots that resolve support tickets automatically, and translation tools like Google Translate
+converting text between languages in real time. Maps to Huawei Cloud EI's NLP and OCR services.
+
+Robotics
+Combines AI with physical machines that sense and act in the real world. Two common use cases:
+warehouse robots that pick, sort, and move packages, and autonomous vacuum cleaners that map a
+room and avoid obstacles on their own. Maps to Huawei's HiLens edge AI platform, built for exactly
+this kind of real-time, on-device inference.
+
+Speech & Audio
+Converts spoken language to text and back, and increasingly recognizes sound more broadly. Two
+common use cases: voice assistants like Siri or Alexa responding to spoken commands, and call
+center software that automatically transcribes and summarizes customer calls. Maps to Huawei
+Cloud EI's Speech service.
+
+Generative AI (GenAI)
+Creates new content instead of just analyzing existing data. Two common use cases: tools like
+Midjourney generating an image from a text prompt, and coding assistants writing code from a plainlanguage description. Huawei's own foundation models in this space are called Pangu.
+
+Agentic AI
+Plans and executes multi-step tasks on its own, rather than answering once and stopping. Two
+common use cases: an AI agent booking a complete trip, flights, hotel, and transport, from a single
+instruction, and a coding agent that writes, tests, and fixes its own code across multiple files without
+approval at every step. The newest category, and where Huawei's ModelArts pipelines are headed.
+
+5. The Global AI Industry Landscape
+AI is not just software. Every layer below depends physically on the layer beneath it, all the way down
+to the power plant. This is the five-layer view NVIDIA CEO Jensen Huang uses to describe the AI
+industry.
+
+The AI stack: each layer depends on the one below it.
+
+Company
+
+Primary Layer(s)
+
+Google
+
+Models and Applications (Gemini, Search)
+
+Microsoft
+
+Infrastructure and Applications (Azure, Copilot)
+
+Huawei
+
+Chips, Infrastructure, and Models (Ascend chips, Huawei Cloud, Pangu
+models), the ecosystem this course is built on
+
+Amazon
+
+Infrastructure and Applications (AWS)
+
+Meta
+
+Models (open-source Llama)
+
+AI adoption also varies by sector: healthcare (diagnostics), finance (fraud detection), retail
+(recommendation engines), and telecom (network optimization) are among the fastest-moving
+industries.
+
+Your Turn
+
+Looking at the five layers, Energy, Chips, Infrastructure, Models, Applications, which layer does
+Huawei's HCCDA-AI certification actually train you to work in? Which layer do you want to be
+working in five years from now?
+
+6. Current AI Trends
+Trend
+
+What It Means
+
+Example Today
+
+GenAI
+
+Systems that create new content: text, images,
+or code, rather than just analyzing existing data
+
+Midjourney, Sora, Huawei Pangu
+
+Edge AI
+
+Running AI directly on a local device instead of
+the cloud, for speed and privacy
+
+Huawei HiLens devices,
+smartphone face unlock
+
+LLMs
+
+AI trained on massive text datasets to understand
+and generate human language
+
+ChatGPT, Gemini, Huawei Pangu
+
+7. Why AI Adoption Is Still a Challenge
+Despite the hype, most organizations still struggle to actually deploy AI successfully.
+Barrier
+
+What It Means
+
+Data
+
+Many organizations lack clean, labeled data needed to train reliable
+models
+
+Regulation
+
+Laws around privacy and AI use are still evolving and vary by country
+
+Cost
+
+Training and running AI models requires expensive infrastructure
+
+Skills gap
+
+Few professionals are trained to build and maintain AI systems
+
+Picture a mid-sized retailer that wants AI-powered demand forecasting. They have years of sales
+data, but it is scattered across spreadsheets with no consistent format, the data barrier. Even after
+cleaning it, local data protection rules limit what customer data they can use, the regulation barrier.
+And the cloud infrastructure needed to train and run the model costs more than their entire IT budget,
+the cost barrier. This is why the skills gap matters so much: someone who understands all three
+barriers is who actually gets a project like this shipped.
+
+Why This Matters
+That last barrier, the skills gap, is exactly the gap this course exists to close. By the end of this
+program, you will be one of the trained professionals organizations are struggling to find.
+
+8. The Gartner Hype Cycle: Where Does AI Stand Today?
+The Gartner Hype Cycle is a model for how new technologies are typically received over time. It has
+five phases, and different AI trends currently sit at different points on the curve.
+Phase
+
+What Happens Here
+
+Innovation Trigger
+
+A breakthrough is announced; interest begins but no usable products
+exist yet
+
+Peak of Inflated Expectations
+
+Excitement peaks; early success stories generate unrealistic
+expectations
+
+Trough of Disillusionment
+
+Interest fades as projects fail to deliver on inflated promises
+
+Slope of Enlightenment
+
+Practical, realistic use cases start to emerge and mature
+
+Plateau of Productivity
+
+The technology becomes a mainstream, reliable part of everyday
+tools
+
+As a rough guide, Generative AI currently sits near the Peak of Inflated Expectations, while traditional
+machine learning (recommendation engines, fraud detection) has already reached the Plateau of
+Productivity.
+
+9. Key Terms Recap
+A quick reference for everything introduced today. Worth revisiting before the exam prep weeks.
+Term
+
+One-Line Definition
+
+AI
+
+A machine performing tasks that normally require human intelligence
+
+Machine Learning
+
+A subset of AI that learns patterns from data instead of fixed rules
+
+Deep Learning
+
+A subset of ML using layered neural networks
+
+Narrow AI
+
+AI built for one specific task only, everything in this course
+
+AGI
+
+Hypothetical AI that could do any intellectual task a human can
+
+Symbolic AI
+
+AI that follows rules a human explicitly wrote
+
+GenAI
+
+AI that creates new content rather than just analyzing existing data
+
+Agentic AI
+
+AI that plans and executes multi-step tasks on its own
+
+LLM
+
+A model trained on massive text data to understand and generate
+language
+
+Edge AI
+
+AI running on a local device instead of the cloud
+
+Hype Cycle
+
+Gartner's model for how new technologies are typically received over time
+
+Coming Up Next
+Tomorrow you move from the industry-wide view to Huawei specifically: its AI strategy, and the
+Cloud EI services that power everything you will build for the rest of this course.

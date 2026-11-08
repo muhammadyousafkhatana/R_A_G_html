@@ -1,0 +1,1055 @@
+Requirement Analysis
+for AI Projects
+Week 4, Day 1, Concept Guide
+
+Last week you built a working AI app with nothing written down first. Today you learn what
+professionals write down before they build anything: what the system must do, how well it must do it,
+and how to ask the people who know. By the end, you can turn a vague idea into requirements
+someone could actually test.
+
+1. Why AI Projects Need Requirements
+A requirement is a written statement of something a system must do, or a quality it must have.
+Requirement analysis is the work of finding out what those statements should be, writing them down
+clearly, and getting the people involved to agree on them, before anyone builds anything.
+Last week you built an AI app on Hugging Face Spaces with nothing written down first. If someone
+had asked how fast it had to be, which kinds of images it had to read, or what it should do with a
+blurry photo, you would not have had answers. The model you picked quietly made those decisions
+for you. TrOCR, for example, reads one line of text at a time, so an app promising to read a whole
+invoice would have failed on its first real test.
+What Is Missing
+
+What Happens Later
+
+A clear goal
+
+The team builds something nobody asked for
+
+Data requirements
+
+The model cannot be trained or tested because the data does not
+exist
+
+An accuracy target
+
+Nobody can say whether the system works
+
+Limits on speed, cost, and
+privacy
+
+These surprise the team after the system is built
+
+AI adds one more reason. You cannot open an AI system and read what it will do, so the behavior you
+want, including what happens when it is wrong, has to be described in advance.
+
+Illustrative: the exact cost varies by project, but the direction never does.
+
+Key Insight
+Requirements are cheapest to fix on paper. A mistake caught in a conversation costs minutes.
+The same mistake caught after the model is trained and deployed can cost weeks.
+
+Running Case: The Invoice Reader
+Today uses one made-up case from start to finish. A small accounting office in Peshawar
+receives about 200 invoices a week, on paper and as scans. Staff type the details into a
+spreadsheet by hand, and mistakes creep in. The owner wants a tool that reads a scanned
+invoice and fills in a table. Every example today comes from this case.
+
+2. What Is a Requirement, and What Makes a Good One
+Think of a requirement as a promise you can check. If nobody can check whether it was kept, it is not
+much of a promise. The difference between a weak requirement and a useful one is usually a
+number, or a clear condition.
+Vague
+
+Testable
+
+The app should be fast
+
+Returns a result within 3 seconds for 95 percent of requests
+
+It should read invoices well
+
+Reads the total correctly on at least 90 percent of a test set of
+100 scanned invoices
+
+It must be secure
+
+Only logged-in staff can open invoices, and invoice images are
+deleted after 30 days
+
+It should be easy to use
+
+A new staff member can process an invoice without help after a
+10-minute demonstration
+
+Five Qualities of a Good Requirement
+Quality
+
+The Question to Ask
+
+Clear
+
+Can it be read in only one way?
+
+Testable
+
+Could someone check it and say pass or fail?
+
+Single
+
+Does it say one thing, not two joined by 'and'?
+
+Necessary
+
+Does a real person actually need it?
+
+Agreed
+
+Have the main stakeholders accepted it?
+
+Setting Priority
+Not everything can be built first. A simple, widely used scheme sorts requirements into three groups,
+with a fourth for things everyone agrees to leave out for now.
+Priority
+
+Meaning
+
+Invoice Reader Example
+
+Must
+
+The system is useless without it
+
+Read the invoice total
+
+Should
+
+Important, but the system still works
+without it
+
+Highlight values it is unsure about
+
+Could
+
+Nice to have if time allows
+
+Export results as a PDF report
+
+Won't (this time)
+
+Agreed to leave out for now
+
+Reading handwritten invoices
+
+Most Common Mistake
+Writing the solution instead of the need. 'Use DeepSeek to read invoices' is a solution. 'Read
+the total from a scanned invoice' is a need. Naming the tool too early locks the team into it
+before anyone knows whether it fits.
+
+3. Stakeholders: Who You Ask
+A stakeholder is anyone who uses a system, pays for it, builds it, sets rules for it, or is affected by
+what it produces. Requirements come from stakeholders, so the first job is knowing who they are.
+Stakeholder
+
+What They Care About
+
+In the Invoice Reader Case
+
+End users
+
+Daily ease of use
+
+The staff who enter invoices
+
+Business owner
+
+Cost and time saved
+
+The office owner
+
+Data owner
+
+Who may use the data, and how
+
+The clients whose invoices these are
+
+Technical team
+
+How it connects to what already
+exists
+
+Whoever maintains the office computers
+
+Legal and compliance
+
+Privacy and record-keeping rules
+
+Rules on keeping tax records and client
+confidentiality
+
+People affected
+
+Correct, fair results
+
+Clients whose accounts are built from the
+extracted numbers
+
+Tomorrow goes deeper into stakeholders and user goals. Today you only need to know whom to ask.
+
+4. Elicitation Techniques
+Elicitation means drawing requirements out of people. Stakeholders rarely hand them over in a neat
+list. They describe problems, habits, and frustrations, and your job is to turn those into requirements.
+
+Interviews
+An interview is a planned conversation with one stakeholder about their work. Two styles are
+common.
+Style
+
+How It Works
+
+Best For
+
+Structured
+
+The same prepared questions are asked to
+everyone
+
+Comparing answers across many
+people
+
+Open
+
+A conversation that follows what the
+person says, with follow-up questions
+
+Finding problems you did not know to
+ask about
+
+● Ask about their work, not about the technology.
+● Ask why more than once. The first answer is rarely the real one.
+● Ask for a recent example instead of a general opinion.
+● Write down their exact words, not your summary of them.
+
+Sample Questions for the Invoice Reader
+● Walk me through what happens from the moment an invoice arrives.
+● Which part of this takes the most time?
+● What goes wrong most often?
+● Can you show me the worst invoice you have seen?
+● What happens if a number is entered wrong?
+● Who checks the entries afterward?
+
+Observation
+People describe their work as it should happen, not as it does. Sitting beside someone and watching
+shows the workarounds, the sticky notes, and the invoices that do not fit the usual format, things no
+interview would surface.
+
+Other Techniques
+Technique
+
+What It Is
+
+When to Use It
+
+Document review
+
+Reading existing forms, reports, and
+past invoices
+
+To see real examples before asking
+questions
+
+Survey
+
+A short questionnaire sent to many
+people
+
+When there are too many people to
+interview
+
+Workshop
+
+A group session with several
+stakeholders at once
+
+To settle disagreements between
+groups
+
+Prototype
+
+A rough mockup people react to
+
+When people cannot say what they
+want until they see something
+
+Most Common Mistake
+Asking users what AI they want. Users know their problem, not the solution. Ask 'what slows
+you down?' instead of 'would you like a machine learning model?'
+
+5. The Questions Specific to AI
+Ordinary software requirements ask what the system does. AI projects need a few more questions,
+because an AI system is right most of the time but never all of the time.
+Question
+
+Why It Matters
+
+What decision or task is the AI
+doing?
+
+'Help with invoices' is not a task. 'Read the supplier, date, and
+total' is.
+
+What data exists today?
+
+A model needs examples. With no scanned invoices on file, there
+is nothing to test with.
+
+Who labels the data, and how?
+
+Someone must write down the correct answer for each example.
+
+How accurate is good enough?
+
+100 percent is not achievable, so a realistic target has to be
+agreed.
+
+What does a wrong answer cost?
+
+A misread total in an accounting record is far worse than a
+misread supplier name.
+
+Question
+
+Why It Matters
+
+What happens when the model is
+unsure?
+
+The system needs a fallback, such as flagging the value for a
+person.
+
+What privacy rules apply?
+
+Invoices contain client names and amounts.
+
+Key Insight
+No AI system is right every time. A good requirement document does not promise perfection. It
+says how wrong is acceptable, and what happens when the system is wrong.
+
+6. Requirement Templates and the Requirement Document
+A template is a ready-made structure that tells you what to ask and where to write the answer. Teams
+use them because they remind you of questions you would otherwise forget, they make documents
+easy to compare, and they make review faster.
+
+The Parts of a Requirement Document
+Part
+
+What It Contains
+
+1. Problem and goal
+
+What is wrong today, and what success looks like
+
+2. Scope
+
+What the project includes, and what it leaves out
+
+3. Stakeholders
+
+Who is involved, and what they need
+
+4. Functional requirements
+
+What the system does
+
+5. Data requirements
+
+What data is needed, and the rules for it
+
+6. Non-functional requirements
+
+How well it must work, and under what limits
+
+7. Constraints and assumptions
+
+Budget, deadline, tools, and things assumed to be true
+
+8. Acceptance criteria
+
+The conditions that must be met for the stakeholders to accept
+the system
+
+Writing One Requirement Properly
+Each requirement gets an ID, one clear statement, a priority, and a way to verify it. The word 'shall' is
+a common convention that marks a statement as required, so nobody has to guess which sentences
+are mandatory.
+ID
+
+Requirement
+
+Priority
+
+How to Verify
+
+FR-01
+
+The system shall read the supplier, date,
+and total from a scanned invoice.
+
+Must
+
+Compare against 100 hand-checked
+invoices. At least 90 percent of totals
+correct.
+
+FR-02
+
+The system shall show the extracted
+values in an editable table before saving.
+
+Must
+
+Staff can change any value, and the
+saved value matches the edit.
+
+FR-03
+
+The system shall highlight any value
+below the confidence threshold.
+
+Should
+
+Values below the threshold appear
+highlighted in a test run.
+
+Fill-in Template
+The system shall [do what], for [whom], when [condition], so that [result]. Verified by [how it
+will be checked].
+
+Your Turn
+Think of the Space you built last week. Write one functional requirement and one non-functional
+requirement for it, using the template above. How would you test each one?
+
+7. The Requirement Documents You Will Meet
+Different documents capture requirements at different levels of detail. Which ones a project uses
+depends on the company, but you will meet these names constantly, so it helps to know what each
+one is for.
+Document
+
+What It Covers
+
+Mainly For
+
+BRD, Business
+Requirements Document
+
+Why the project exists: business goals, scope, and
+expected benefits
+
+Owners and
+sponsors
+
+URS, User Requirements
+Specification
+
+What users need to be able to do, in their own
+terms
+
+Users and the team
+
+SRS, Software
+Requirements Specification
+
+The full description of what the system shall do:
+functional and non-functional requirements, inputs
+and outputs, and constraints
+
+Developers,
+testers, and clients
+
+FRD, Functional
+Requirements Document
+
+Only the functional detail, often a section inside
+the SRS
+
+Developers
+
+PRD, Product Requirements
+Document
+
+Features, target users, and goals for a product,
+common in product companies
+
+Product and
+engineering teams
+
+User stories and use cases
+
+One-line needs written as: As a [who], I want
+[what], so that [why]. For the invoice reader: As a
+staff member, I want unsure values highlighted, so
+that I know which to double-check.
+
+Agile teams
+
+RTM, Requirements
+Traceability Matrix
+
+A table linking each requirement to its source and
+to the test that checks it
+
+Testers and
+reviewers
+
+Around These Documents
+● Before them come the raw materials: interview notes, a stakeholder list, and meeting minutes.
+● For AI projects, add a data requirements document covering source, format, volume, labels,
+
+privacy, and retention.
+
+● After a model exists comes a model card, the documentation page you saw on Hugging Face
+
+last week, which tells others what the model does and where it falls short.
+
+● The requirement document you write tomorrow is essentially a small SRS.
+
+8. Functional Requirements: Input, Output, Workflow
+Functional requirements describe what the system does. For an AI system, they are easiest to write
+by splitting the system into three parts.
+Part
+
+The Questions
+
+Invoice Reader
+
+Input
+
+What goes in, in what format and size,
+and from whom?
+
+A scanned invoice as JPG, PNG, or PDF, up to
+10 MB, uploaded by staff
+
+Output
+
+What comes out, in what format, and
+to whom?
+
+A table of supplier, date, line items, and total,
+shown on screen and exportable to a
+spreadsheet
+
+Workflow
+
+What steps happen, in what order,
+and who does what?
+
+Upload, check the image, read the table, flag
+doubtful values, staff review, save
+
+The workflow for the invoice reader, with the two branches a demo would usually skip.
+
+Functional Requirements Specific to AI
+Item
+
+Example Requirement
+
+Confidence threshold
+
+The system shall highlight any value with a confidence below 80 percent.
+
+Human review path
+
+A staff member shall be able to correct any value before it is saved.
+
+Unsupported input
+
+The system shall reject other file types and tell the user why.
+
+Logging
+
+The system shall record each upload, result, and correction, so accuracy
+can be measured later.
+
+Key Insight
+Look at what the workflow includes that a demo would skip: what happens with a bad image,
+what happens when the model is unsure, and who is responsible for the final answer. Those are
+the parts that decide whether a system is usable in real life.
+
+9. Data Requirements
+For an AI project, data is a requirement like any other, and the one most often missing. A model
+cannot be built or tested without it.
+Data Question
+
+Example Requirement for the Invoice Reader
+
+Source
+
+Scanned invoices from the office's existing files, plus new invoices as they arrive
+
+Format
+
+JPG, PNG, or PDF scans at 200 DPI or higher
+
+Volume
+
+At least 100 invoices for testing, with the correct values written down by hand
+
+Quality
+
+Text readable by a person, with no pages cut off
+
+Labels
+
+A staff member types the correct supplier, date, and total for each test invoice
+
+Privacy
+
+Client names removed or access limited, and a check on whether clients must be
+told
+
+Retention
+
+Invoice images deleted after 30 days, extracted values kept as long as
+accounting records require
+
+Freshness
+
+New invoice layouts added to the test set every quarter, as suppliers change
+their formats
+
+Why AI Projects Often Fail Here
+Teams plan the model and discover late that the data is scattered, unlabeled, or not allowed to
+be used. Asking the data questions first costs a conversation. Asking them last can end the
+project.
+
+10. Non-Functional Requirements
+Non-functional requirements describe how well the system does its job, and under what limits. They
+are not about what the system does, but about speed, safety, cost, and fairness.
+Category
+
+What It Asks
+
+Measurable Example
+
+The AI Twist
+
+Performance
+
+How fast, and how
+accurate?
+
+A result within 3 seconds for 95
+percent of requests. Totals
+correct on 90 percent of test
+invoices.
+
+Accuracy is a target, not a
+promise, and must be
+measured on a test set.
+
+Scalability
+
+How much load,
+and how will it
+grow?
+
+200 invoices a week now, 2,000
+a week within a year
+
+Every model call costs time
+and money, so growth has a
+price.
+
+Availability
+
+When must it be
+working?
+
+Working during office hours, 99
+percent of the time
+
+Hosted models can be slow
+to wake up or briefly
+unavailable.
+
+Security and
+privacy
+
+Who can see
+what?
+
+Only logged-in staff can open
+invoices, and images are deleted
+after 30 days
+
+Sending data to an outside
+model means that data
+leaves your control.
+
+Category
+
+What It Asks
+
+Measurable Example
+
+The AI Twist
+
+Usability
+
+How easy for the
+real users?
+
+A new staff member works
+unaided after a 10-minute
+demonstration
+
+The interface must show
+uncertainty, so users know
+when to double-check.
+
+Cost
+
+What is the
+budget?
+
+Running cost under Rs 20,000 a
+month
+
+Per-call and per-token
+pricing can grow faster than
+expected.
+
+Ethics and
+fairness
+
+Who could be
+harmed or treated
+unfairly?
+
+Accuracy checked separately on
+Urdu and English invoices
+
+A model can work well on
+one kind of input and poorly
+on another.
+
+Explainability
+
+Can a person see
+why it gave this
+answer?
+
+Each extracted value shown
+beside the part of the image it
+came from
+
+Many models cannot explain
+themselves, so the interface
+has to help.
+
+You Have Already Met These
+Several things from last week were non-functional requirements in disguise.
+What You Met Last Week
+
+The Requirement Behind It
+
+The 503 model loading error
+
+Availability
+
+The 429 rate limit error
+
+Scalability
+
+The token usage numbers in response.usage
+
+Cost
+
+max_tokens and the context window
+
+Limits on performance and cost
+
+Your Hugging Face API key
+
+Security
+
+A free Space going to sleep
+
+Availability
+
+Most Common Mistake
+Leaving non-functional requirements for later. A system that does the right thing too slowly, too
+expensively, or too insecurely is still the wrong system, and these are the requirements hardest
+to fix after the build.
+
+11. Functional vs Non-Functional: Telling Them Apart
+One quick test sorts almost every requirement. Ask whether it describes something the system does,
+or how well it does it. A functional requirement usually contains a verb a user would see, such as
+read, show, or export. A non-functional requirement usually contains a number or a quality, such as 3
+seconds, secure, or 99 percent.
+
+Functional requirements sit inside the system. Non-functional requirements form the walls around it.
+
+Statement
+
+Type
+
+The system shall let staff correct a value before saving.
+
+Functional
+
+The system shall be available during 99 percent of office hours.
+
+Non-functional (availability)
+
+Invoice images shall be at least 200 DPI.
+
+Data requirement
+
+The system shall flag any value below 80 percent confidence.
+
+Functional
+
+The system shall cost less than Rs 20,000 a month to run.
+
+Non-functional (cost)
+
+At least 100 test invoices shall have hand-written correct values.
+
+Data requirement
+
+Some requirements are hard to classify, and that is fine. Do not spend long on it. The goal is to make
+sure all three kinds, functional, non-functional, and data, are written down.
+
+12. Reading a Sample Requirement Document
+Now that you have the vocabulary, here is a short draft for the invoice reader, marked up the way a
+reviewer would. Read the left column first, and try to predict the verdict before reading the others.
+Statement in the Draft
+
+Verdict
+
+Why
+
+Problem: Staff type about 200 invoices a
+week by hand, and errors occur.
+
+Good
+
+Names the pain, with a number.
+
+Goal: Reduce manual typing and errors.
+
+Vague
+
+No target. Reduce by how much, and
+how will anyone measure it?
+
+FR-01: The system shall read the supplier,
+date, and total from a scanned invoice.
+
+Mostly
+good
+
+Clear, single, and testable, but it gives no
+accuracy target.
+
+FR-02: The system shall let staff correct
+values before saving.
+
+Good
+
+Single, clear, and easy to verify.
+
+FR-03: The system should work well with
+different invoice layouts.
+
+Vague
+
+'Work well' and 'different layouts' cannot
+be tested. Which layouts, and how well?
+
+NFR-01: Results shall appear within 3
+seconds for 95 percent of invoices.
+
+Good
+
+Measurable, with a clear pass or fail.
+
+NFR-02: The system shall be secure.
+
+Vague
+
+Says nothing checkable. Who may see
+invoices, and for how long?
+
+Data: 100 sample invoices are available.
+
+Incomplete
+
+Nobody has written down the correct
+values for them, and there is no privacy
+rule.
+
+Not mentioned anywhere
+
+Missing
+
+What happens when the model is unsure
+or the scan is unreadable, availability,
+cost, and who approves the document.
+
+Key Insight
+A first draft with gaps is normal. Finding them on paper, in review, is the whole point of writing
+requirements down.
+
+13. The Completeness Checklist
+Before a requirement document goes to the stakeholders, run it through this checklist. Every item
+should be a clear yes.
+#
+
+Check
+
+Ask Yourself
+
+Done
+
+Problem and goal
+
+Is success described in a way that can be measured?
+
+[ ]
+
+Scope
+
+Does it say what is included, and what is not?
+
+[ ]
+
+Stakeholders
+
+Are they identified, and the main ones consulted?
+
+[ ]
+
+Quality of each
+requirement
+
+Is every requirement clear, single, and testable?
+
+[ ]
+
+#
+
+Check
+
+Ask Yourself
+
+Done
+
+Input, output, workflow
+
+Are all three covered?
+
+[ ]
+
+Data
+
+Are source, format, volume, labels, and privacy covered?
+
+[ ]
+
+Performance
+
+Do speed and accuracy have numbers and a test method?
+
+[ ]
+
+Security and fairness
+
+Are privacy, access, and fairness covered?
+
+[ ]
+
+Failure behavior
+
+Is it defined for unsure answers, bad input, and outages?
+
+[ ]
+
+Priority and agreement
+
+Are priorities set, and have the stakeholders agreed?
+
+[ ]
+
+14. Key Terms Recap
+Term
+
+One-Line Definition
+
+Requirement
+
+A written statement of what a system must do or be
+
+Requirement analysis
+
+Finding, writing down, and agreeing on requirements before building
+
+Stakeholder
+
+Anyone who uses, funds, builds, regulates, or is affected by a system
+
+Elicitation
+
+Drawing requirements out of people, by interview or observation
+
+Functional requirement
+
+What the system does: its input, output, and workflow
+
+Non-functional
+requirement
+
+How well the system does it, and under what limits
+
+Data requirement
+
+What data is needed: source, format, volume, labels, rules
+
+Testable
+
+Written so that someone can check it and say pass or fail
+
+Acceptance criteria
+
+Conditions stakeholders must see met before accepting the system
+
+Confidence threshold
+
+The score below which an answer is flagged instead of trusted
+
+Human review path
+
+A step where a person checks or corrects the output
+
+Scope
+
+What a project includes, and deliberately leaves out
+
+SRS
+
+Software Requirements Specification: what the system shall do, and how
+well
+
+User story
+
+A one-sentence need: As a [who], I want [what], so that [why]
+
+Priority
+
+How important a requirement is: Must, Should, or Could
+
+Coming Up Next
+Tomorrow you draft a complete requirement specification for an AI application: identifying its
+stakeholders and their goals, writing the full spec, and reviewing each other's drafts. Then you
+map each requirement to the tools that could meet it, and decide between edge, cloud, or a
+hybrid.

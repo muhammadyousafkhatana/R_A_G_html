@@ -1,0 +1,427 @@
+Huawei's AI Ecosystem
+Strategy, Cloud EI & the Full-Stack
+Day 2, Concept Guide
+
+Yesterday you mapped what AI is, in general. Today you zoom in on one company, because every
+tool you touch for the rest of this course comes from its ecosystem. You will learn the strategy behind
+the products, what each service actually does, and how to match a real problem to the right Huawei
+capability. By the end of today, ModelArts, Cloud EI, and HiLens will mean something concrete.
+
+1. What Is Huawei?
+Before diving into Huawei's AI products, it helps to know the company itself. Huawei Technologies
+was founded in 1987 in Shenzhen, China, by Ren Zhengfei, a former army engineer, starting out by
+manufacturing phone switches. Today it is one of the largest technology companies in the world, and
+one of the more unusual ones: it has never gone public. Huawei is privately owned by its own
+employees rather than by outside shareholders.
+Fact
+
+Detail
+
+Founded
+
+1987, in Shenzhen, China
+
+Employees
+
+About 213,000 worldwide, over half of them in R&D
+
+Global reach
+
+Operates in more than 170 countries and regions, serving over 3 billion
+people
+
+2025 Revenue
+
+Roughly US$126 billion (CN¥880.9 billion)
+
+Core businesses
+
+Telecom networks, enterprise IT, consumer devices, and cloud services,
+including the AI stack covered today
+
+Ownership
+
+Privately held by its own employees, not publicly traded
+
+Key Insight
+Huawei's AI push is not a side project bolted onto a phone company. It sits inside a company
+that already builds telecom networks used by carriers worldwide, and that reinvests roughly a
+fifth of its total revenue into R&D every year. That scale is a big part of why Huawei can credibly
+compete across every layer of the AI stack, chips included, rather than just building software on
+someone else's hardware.
+
+2. Huawei's AI Strategy: Full-Stack, All-Scenario
+At HUAWEI CONNECT 2018, Huawei announced an AI strategy built on two ideas that map directly
+onto yesterday's five-layer cake.
+Idea
+
+What It Means
+
+Maps To
+
+Full-Stack
+
+Huawei builds across every layer, not just
+one or two
+
+Ascend chips, Huawei Cloud
+infrastructure, Pangu models,
+industry applications
+
+All-Scenario
+
+The same stack runs everywhere it is
+needed
+
+Public cloud, private cloud, edge
+devices, consumer devices
+
+Key Insight
+Most companies pick one or two layers. Google leans on Models and Applications. Amazon
+leans on Infrastructure and Applications. Huawei is one of the few competing vertically across
+the entire stack, from silicon to software. This matters for you because the skills you build here
+transfer across more layers of the industry than a single-layer company would teach.
+
+Full-Stack (which layer) crossed with All-Scenario (where it runs): the same grid, filled in with real Huawei products.
+
+What Is Pangu?
+Pangu is Huawei's own family of foundation models, its answer to GPT, Gemini, and Llama.
+Rather than one single general-purpose model, Pangu is split into versions built for specific
+industries: weather forecasting, drug discovery, finance, and a general-purpose assistant
+model, among others. When a Huawei application, or a customer's own custom AI, needs a
+foundation model to build on, Pangu is usually the starting point.
+
+3. The 2026 Update: The Agentic Shift
+Strategies evolve. At HUAWEI CONNECT 2026, held in Shanghai this very month, Huawei's cloud
+story centered on a new phrase: Agentic Hybrid Cloud, Powering a New Era of Intelligence.
+Recall yesterday's newest domain, Agentic AI: systems that plan and execute multi-step tasks rather
+than answering once and stopping. Huawei's 2026 bet is that enterprises will not run agents on
+public cloud alone or on private infrastructure alone, but across a hybrid of both, sensitive data and
+low-latency steps kept private, heavy training and bursting handled on public cloud. The broader
+ambition behind this is what Huawei calls All Intelligence, extending AI from a handful of tech
+companies into every industry and every country, including markets like Pakistan.
+
+Key Insight
+Yesterday you learned Agentic AI as one domain among six. Today you see it as a strategy:
+Huawei is rebuilding its entire cloud story around it. When a trend moves from one bubble on a
+diagram to the theme of a company's flagship conference, that is how you know it is being
+taken seriously, not just hyped.
+
+4. Huawei Cloud EI: The Service Portfolio
+
+EI stands for Enterprise Intelligence. These are pre-built AI services you call through an API, no
+training required, similar in spirit to AWS AI services or Google Cloud AI. Four families matter for this
+course.
+Service
+
+What It Does
+
+Day 1 Domain Match
+
+Vision
+
+Detects, classifies, and tracks objects, faces, and
+scenes in images and video
+
+Computer Vision
+
+NLP
+
+Sentiment analysis, text classification, and entity
+extraction
+
+Natural Language
+Processing
+
+Speech
+
+Speech-to-text and text-to-speech conversion
+
+Speech & Audio
+
+OCR
+
+Extracts text from images, including specialized table
+and document OCR
+
+Overlaps NLP and
+Computer Vision
+
+Key Insight
+You do not need to train a model to use an EI service. It is pre-trained and production-ready the
+moment you call it. This is the fastest way to add AI to an application, but you trade
+customization for speed. Later in this course you will learn exactly when an EI service is
+enough, and when you need to train something custom on ModelArts instead.
+
+Every major cloud provider offers this same basic shape of service, just under a different name:
+Provider
+
+Equivalent Service
+
+Amazon
+
+AWS AI Services (Rekognition, Comprehend, Transcribe, Textract)
+
+Google
+
+Google Cloud AI (Vision AI, Natural Language AI, Speech-to-Text, Document
+AI)
+
+Microsoft
+
+Azure AI Services (Computer Vision, Language, Speech, Form Recognizer)
+
+Real example: imagine an e-commerce platform that wants to extract text from product labels in
+photos (OCR), detect whether a review is positive or negative (NLP sentiment), and verify a
+customer's identity through a selfie (Vision face matching). All three can be wired up in a single day
+by a developer who simply knows how to call a REST API, no model training involved.
+
+5. ModelArts: Where You'll Actually Build
+If EI services are pre-built AI, ModelArts is where you build custom AI. It is Huawei's end-to-end
+machine learning platform, comparable to AWS SageMaker, Google Vertex AI, or Azure ML.
+● A notebook environment (Jupyter-based) for writing and running code
+● Data management and labeling tools
+● Training infrastructure you can point at CPU, GPU, or Ascend hardware
+● ExeML: AutoML capability for near-codeless model building
+● Model versioning and experiment tracking
+● One-click deployment to the cloud or to the edge via HiLens
+
+Key Insight
+Remember the skills-gap barrier from Day 1? ModelArts is Huawei's direct answer to it. ExeML
+lets someone with domain knowledge but limited ML theory produce a working model. Your job
+in this course is to understand what is happening under the hood well enough to use the
+platform properly and pass the certification, not to become a research scientist in three months.
+
+6. HiLens: AI at the Edge
+HiLens is Huawei's platform for running AI directly on a device, a camera, sensor, or piece of
+industrial equipment, instead of sending every frame to the cloud for inference.
+Why edge matters:
+● Latency: real-time decisions cannot wait for a round trip to the cloud
+● Bandwidth: streaming video to the cloud around the clock is expensive and often unnecessary
+● Privacy: sensitive footage or data may not be allowed to leave the premises
+● Reliability: an edge device keeps working even when the internet connection drops
+
+HiLens combines the HiLens Kit, an edge device pairing a camera with an Ascend chip, with a cloud
+console (HiLens Studio and Console) used to develop, deploy, and monitor those skills at scale.
+
+Day 1 Connection
+Yesterday you learned Edge AI as a trend and Robotics as a domain. HiLens is where those two
+intersect. A warehouse robot using HiLens does not send every camera frame to the cloud, it
+processes video locally and only reports out when something worth acting on happens.
+
+Key Insight
+In short: ModelArts trains the model. HiLens runs it at the edge. You will use both together later
+in this course.
+
+7. Ascend & Atlas: The Hardware Underneath
+This is where Full-Stack becomes physical. While most AI platforms run on NVIDIA GPUs, Huawei
+builds its own AI processors, positioning the entire stack as a genuine alternative rather than a
+reseller of someone else's chips.
+If you already know Nvidia's naming, here is the direct mapping:
+Huawei
+
+Nvidia Equivalent
+
+Ascend (the chip)
+
+An Nvidia GPU, such as the H100 or A100
+
+Atlas (the hardware built on it)
+
+An Nvidia DGX server, a machine built around the chips
+
+Key Insight
+Ascend is the engine, Atlas is the car. The exact same relationship as an Nvidia GPU to an
+Nvidia server.
+
+Product
+
+Role
+
+Ascend 910
+
+Huawei's established data-center chip for training, the one most of this
+course's hands-on work is built around
+
+Ascend 310
+
+A low-power chip built for edge devices, including the HiLens Kit
+
+Atlas 300
+
+An accelerator card for adding AI compute to existing servers
+
+Atlas 500
+
+A compact edge station for on-site deployment, e.g. a retail store or factory
+floor
+
+Atlas 800
+
+A full training and inference server for data-center scale workloads
+
+Staying Current
+This week, at HUAWEI CONNECT 2026, Huawei confirmed a roughly one-generation-per-year
+roadmap beyond the 910: Ascend 950 in 2026, Ascend 960 in 2027, and Ascend 970 in 2028,
+each roughly doubling compute over the last. This course is built around the established
+Ascend and Atlas lineup above, but it is worth knowing the roadmap exists, since the hardware
+underneath this entire ecosystem is actively moving.
+
+Key Insight
+Remember the pairing: Ascend is the chip, Atlas is the hardware product built around the chip.
+When you train a model on ModelArts, you can choose which of this hardware it runs on, and
+that choice affects cost, speed, and where the model can ultimately be deployed.
+
+8. Mapping Real Use Cases to Huawei Capabilities
+Here is how a real project tends to flow through Huawei's portfolio, from problem to deployed
+system.
+Scenario
+
+AI Domain (Day 1)
+
+Huawei Capability
+
+Deployment
+
+Automated attendance using
+face recognition
+
+Computer Vision
+
+EI Vision API
+
+Cloud
+
+Custom defect detection on
+a textile production line
+
+Computer Vision
+
+ModelArts (train a custom
+model)
+
+HiLens (edge)
+
+Sentiment analysis of Urdu
+customer reviews
+
+NLP
+
+ModelArts (fine-tune a
+model)
+
+Cloud API
+
+Digitizing scanned invoices
+for accounting
+
+OCR
+
+EI OCR (General Table)
+
+Cloud
+
+Smart traffic light
+optimization
+
+Robotics + Vision
+
+ModelArts + HiLens
+
+Edge
+
+Voice-ordered banking
+assistant
+
+Speech + NLP
+
+EI Speech + NLP APIs
+
+Cloud
+
+Key Insight
+The decision tree is simple. Need speed and do not require customization: use an EI service.
+Need custom accuracy or have unique data: use ModelArts. Need real-time, offline, or privacypreserving inference: use HiLens.
+
+9. Huawei's Global AI Initiatives
+Beyond products, Huawei's AI strategy rests on three further pillars.
+
+Talent Development
+Huawei partners with governments and training providers worldwide to close the AI skills gap
+directly, rather than only hiring already-trained professionals. Its Huawei ICT Academy network alone
+partners with over 2,600 universities across more than 110 countries, training over 200,000 students
+a year. Local programs delivered through partners such as NAVTTC and Arfa Karim Technology
+Incubator, including this course, are part of that same approach: building the skilled workforce a
+market needs, in the market itself.
+
+Research Collaboration
+Huawei works with universities globally on AI research, particularly around foundation model
+development (the Pangu family), Ascend architecture optimization, and industry-specific AI
+applications in fields like healthcare, agriculture, and energy.
+
+Open Ecosystem
+Despite building its own chips, Huawei keeps the software layer open: ModelArts supports
+TensorFlow and PyTorch alongside Huawei's own MindSpore framework, and CANN (the compute
+layer that talks to Ascend chips) is community-driven rather than closed.
+
+Why This Matters
+On Day 1, you learned the skills gap is one of the four major barriers to AI adoption. Today you
+saw how Huawei is actively working to close it, and this program is a direct example. The
+companies in your course outline, Huawei, PTA, Jazz, NADRA, SAP, Accenture, and the rest,
+are not abstract examples. They are real employers seeking exactly the skills you are building
+right now.
+
+Your Turn
+Look back at the Full-Stack x All-Scenario matrix. Which single cell does this three-month
+course train you for most directly? And which cell would you aim for in your first AI job, five
+years from now, what would it take to get there?
+
+10. Key Terms Recap
+
+Term
+
+One-Line Definition
+
+Full-Stack (Huawei)
+
+Huawei builds at every AI layer, from chips to applications
+
+All-Scenario
+
+The same stack deploys across cloud, enterprise, and edge
+
+Agentic Hybrid Cloud
+
+Huawei's 2026 vision: a cloud built for AI that plans and acts
+
+Cloud EI
+
+Huawei's pre-trained, API-callable AI services
+
+ModelArts
+
+Huawei's one-stop platform for building, training, and deploying models
+
+ExeML
+
+Near-codeless AutoML tool built into ModelArts
+
+HiLens
+
+Huawei's edge AI platform for on-device inference
+
+Ascend
+
+Huawei's family of AI processor chips
+
+Atlas
+
+Huawei's server and hardware product line built on Ascend chips
+
+Pangu
+
+Huawei's family of foundation models
+
+Coming Up Next
+Tomorrow you keep building on today's map, moving toward hands-on work with the services
+and tools you just learned to place.

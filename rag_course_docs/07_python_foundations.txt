@@ -1,0 +1,385 @@
+Python Foundations: From Kaggle to Functions
+Week 2, Day 1 Notebook
+
+---
+
+Every concept below follows the same shape. First, the plain idea, with the simplest possible variable names, so the concept itself is never competing with confusing names for your attention. Then, the single most common mistake beginners make with that concept, and why it happens. Then, three or four real examples of where that exact concept is used in real production systems.
+
+Run every cell in order, top to bottom.
+
+Instructor: Aimal Khan
+
+## 1. What Is Kaggle, and Why We Use It
+
+Kaggle is a free, browser-based platform for writing and running Python code, owned by Google. You do not install anything. You open a browser, open a notebook, and your code runs on Google's servers, including free access to a GPU, which is normally expensive hardware.
+
+A notebook is a document made of cells. Some cells hold text, like this one, a markdown cell. Some cells hold code you can run, like the ones below, a code cell.
+
+### Alternatives, and why they exist
+
+| Platform | What It Is | Why Someone Would Use It |
+|---|---|---|
+| Google Colab | Google's own free notebook platform, very similar to Kaggle | Slightly tighter integration with Google Drive |
+| Local Jupyter Notebook | Running notebooks on your own laptop | Full control, no internet needed, but you install Python yourself and may not have a GPU |
+| VS Code | A general-purpose code editor that can also run notebooks | Preferred by professional developers who also write larger, non-notebook projects |
+
+Why This Course Uses Kaggle: It is free, needs no installation, gives you a GPU when later labs need one, and datasets used in this course attach in a few clicks. Once you understand notebooks here, moving to Colab, VS Code, or Huawei's own ModelArts notebooks later is a small jump, not a new skill.
+
+## 2. Notebook Basics: Cells, Kernels, and Running Code
+
+A notebook remembers everything you have run so far, in order, in something called the kernel.
+
+If you define a variable in one cell, then delete that cell, the variable still exists in the kernel's memory until you restart it. If you run cells out of order, the notebook can behave unpredictably.
+
+Key Insight: When in doubt, use Restart and Run All. This clears the kernel's memory completely and reruns every cell in order from the top. It is the single best habit for avoiding confusing bugs that are not really bugs in your code, just leftover state from an earlier run.
+
+Let's prove this to ourselves.
+
+The second cell worked because the first cell already ran and stored `a` in the kernel's memory.
+
+### How to read a Python error
+
+You are about to see your first real error, on purpose. Every programmer sees these constantly, learning to read one calmly is a core skill.
+
+That red block is called a traceback. Read only the very last line first. It names the error type, `NameError`, and explains it in plain English, this name has never been defined. Whenever you hit an error later, start at that last line. It almost always tells you exactly what went wrong.
+
+## 3. Variables
+
+### What is a variable?
+
+A variable is a name that points to a value, so you can refer to that value again later without retyping it.
+
+### A variable's value can change
+
+### Comments
+
+Any line starting with `#` is a comment. Python ignores it completely, it exists only so a human reading the code later understands what is happening. You have already seen these throughout this notebook.
+
+### Basic arithmetic, now with variables
+
+You do not need a variable to do math, `3 + 4` works fine on its own, but math becomes far more useful once the numbers have names.
+
+`+` adds, `-` subtracts, `*` multiplies, `/` divides, exactly as before, only now the values have meaningful names instead of being typed directly.
+
+### The most common variable error
+
+You already saw it two cells ago, `NameError`. It happens two ways: a typo in a variable's name, or using a variable before the cell that creates it has run. Always check spelling first, then check run order.
+
+## Data Types: Why We Need More Than One
+
+Every variable holds a value of a specific type. There are four you will use constantly.
+
+### int: whole numbers
+
+### float: decimal numbers
+
+### str: text
+
+### Combining two strings with +
+
+This is called concatenation, joining text together.
+
+Notice the `" "` in the middle, a space typed as its own tiny string, without it the names would run together as `AliKhan`.
+
+### The length of a string
+
+### A cleaner way to combine text and variables: f-strings
+
+Writing `+` between every piece of text and every variable gets messy fast, and you already saw it can cause a `TypeError` if a number is involved. An f-string, a string with an `f` right before the opening quote, lets you drop variables directly inside `{}`, without any `+` at all.
+
+Compare that to writing it the old way, `"My name is " + full_name + " and I am " + str(age) + " years old."`, an f-string does the same thing far more clearly, and you will see this style used constantly for the rest of this notebook.
+
+### bool: True or False
+
+### The most common data type error
+
+Mixing types where Python cannot guess what you mean.
+
+That is a `TypeError`, read the last line, it says you cannot combine `str` and `int` with `+`. Python will not silently guess whether you meant text or math. The fix is to convert one type into the other on purpose.
+
+### Now let's use all four types together, in three real scenarios
+
+**Scenario 1: an AI training job's configuration**
+
+**Scenario 2: a product in an online store**
+
+**Scenario 3: a user account**
+
+Why This Matters: Every ModelArts training job you run later in this course starts with exactly this pattern, a block of configuration variables at the top, before anything else happens.
+
+## 4. Lists
+
+### Before we start: what is indexing, and why does it start at 0?
+
+Any ordered collection in Python, including lists, tuples, and even plain text, lets you grab one item using its position, called an index. Indexes start counting at 0, not 1. This trips up almost everyone at first.
+
+The easiest way to think about it, an index is how many steps away from the start something is, not what number it is in line. The very first item is 0 steps away from the start, so its index is 0. The second item is 1 step away, index 1.
+
+### The technical reason, for those who want it
+
+This is not just a style choice, it comes from how computers actually store these collections in memory. A list is stored as one continuous block of memory, and the computer finds any item using this formula, `address = start_of_block + (index * size_of_one_item)`. The first item sits right at the start of that block, zero items ahead of itself, so its offset, its index, is 0. An index is really a memory offset, not a position number.
+
+This convention was set by the C programming language decades ago, and nearly every language built afterward, including Python, kept it, partly for consistency across languages, and partly because it makes other rules work out cleanly. For example, slicing `some_list[a:b]` always gives you exactly `b - a` items, which only holds true if counting starts at 0. Change the starting point to 1 and that neat arithmetic breaks.
+
+Strings are ordered collections too, so the exact same indexing rules apply to text, not just lists. `word[0]` is `c`, the first character, 0 steps from the start.
+
+### What is a list?
+
+An ordered, changeable collection of values.
+
+### Accessing items by position
+
+Positions start at 0.
+
+### The most common list error
+
+`IndexError`, list index out of range. `fruits` only has 3 items, positions 0, 1, and 2. Asking for a position beyond what exists is the single most common list mistake. The fix, check `len(fruits)` before trusting a position exists.
+
+### Changing a value at a position
+
+### Adding and removing items
+
+### Taking a subset, slicing
+
+### Now four real scenarios
+
+**Scenario 1: a request queue**, a server processing images in order. Why not four separate variables instead? Because we do not know in advance how many requests will arrive, a list can grow to any size while the program runs, separate variables cannot.
+
+**Scenario 2: a dataset's class labels**. Why not five separate variables? Same reason, plus a list lets us loop through every label with a few lines instead of one line per label.
+
+**Scenario 3: a shopping cart**. A list fits naturally here because a cart changes constantly, items get added and removed throughout a shopping session, exactly what a list is built for.
+
+**Scenario 4: a to-do list**. Same idea, tasks are added and completed in an order that is not known ahead of time.
+
+A list is ordered, mutable, and allows duplicates. Keep those three properties in mind, they separate a list from a tuple and a set, next.
+
+## 5. Tuples
+
+### What is a tuple?
+
+Ordered, like a list, but immutable, its contents cannot change after creation.
+
+### Accessing items by position
+
+### The most common tuple error
+
+Let's cause it for real first, uncaught, the way we have with every other error so far.
+
+`TypeError`, tuples do not support item assignment. That crashed the program, if this line were in the middle of a longer script, every line after it would simply never run.
+
+### What is try and except, and why do we need it?
+
+Sometimes you can predict that a line of code might fail, and you would rather handle that failure gracefully than let the entire program stop. `try` says attempt this code. `except` says if a specific error happens, run this instead of crashing.
+
+Compare the two cells above carefully. Same exact mistake, same `TypeError`, but the first one stopped everything, and the second one let us print a friendly message and keep going. You do not need to write `try/except` yourself yet in this course, just recognize it when you see it, and understand what it is protecting against. The most common tuple mistake itself is simply forgetting they are locked, and trying to update one like a list.
+
+### Four real scenarios
+
+**Scenario 1: a fixed RGB color**. Why not a list? Nothing about a color's red, green, and blue values should ever change independently later in a program. A tuple's immutability is the guarantee that protects that.
+
+**Scenario 2: a database record**. Why not a list? In a list, another part of a program could accidentally overwrite someone's ID with their name. A tuple makes that mistake impossible, the values are locked the moment the record is created.
+
+**Scenario 3: GPS coordinates**. A location's latitude and longitude belong together permanently, a tuple prevents one from ever being updated without the other.
+
+**Scenario 4: a fixed set of weekday names**. The five weekday names will never need to grow, shrink, or reorder, exactly the case a tuple is built for.
+
+Use a list when a collection needs to grow or shrink. Use a tuple when the values belong together permanently, as one fixed unit.
+
+## 6. Sets
+
+### What is a set?
+
+An unordered collection of unique values, duplicates are removed automatically.
+
+Notice the output only shows `{1, 2, 3}`. As Python builds this set, it checks every new value against what it already has. The second `2` and the second and third `3` are equal to values already present, so they are silently dropped, not counted, not flagged, just skipped entirely.
+
+### What happens if we add a value that already exists?
+
+Nothing changed, and no error appeared. This is different from every error we have seen so far. Adding a duplicate to a set is not a mistake as far as Python is concerned, it is simply ignored. A set never complains about duplicates, it just quietly keeps one copy, forever.
+
+### Checking membership
+
+### The most common set error
+
+`TypeError`, set object is not subscriptable. A set has no order, so position 0 has no meaning, unlike a list or tuple. If you need order, use a list. If you only need uniqueness and fast checking, a set is correct as is.
+
+### Four real scenarios
+
+**Scenario 1: deduplicating user IDs**. Without a set, you would need to write your own loop checking each ID against every ID already collected. A set does this automatically, because it refuses duplicates by definition.
+
+**Scenario 2: allowed file extensions**. Why not a list? A list checks membership by looking at every item one at a time until it finds a match. A set checks almost instantly no matter how large it grows, which matters once you are checking against thousands of allowed values.
+
+**Scenario 3: comparing two customer groups**. Without set operations, comparing two customer lists would mean writing a loop and a conditional together by hand. `&` and `|` do the same job in one line.
+
+**Scenario 4: tags on a blog post**. A post's tags should never list the same tag twice, a set enforces that automatically, with no extra code needed.
+
+## 7. Dictionaries
+
+### What is a dictionary?
+
+Key-value pairs. You look a value up by name, its key, instead of by position.
+
+### Accessing a value by key
+
+### The most common dictionary error
+
+`KeyError`, the missing key is named directly. This happens constantly with API responses or configs where a field is not always present.
+
+### Checking safely, to avoid that error
+
+### Adding or changing a key
+
+### Four real scenarios
+
+**Scenario 1: an AI model's configuration**. Why not a list here? In a list you would need to remember that position 0 is always the model name and position 1 is always the learning rate, easy to mix up as more settings are added. A dictionary lets you ask for learning_rate by name instead.
+
+**Scenario 2: a simulated API response**. Real APIs return many fields at once. A dictionary lets code ask for exactly the field it needs, by name, without caring what order everything arrived in.
+
+**Scenario 3: a contact book**. Looking someone up by name is the entire point, a list would force you to search every entry one at a time to find the right number.
+
+**Scenario 4: inventory counts**. Same reasoning, you want to reach the count for notebooks directly, not search for it.
+
+## 8. Conditionals: if, elif, else
+
+### What is a conditional, and why?
+
+Code that runs differently depending on whether something is true or false.
+
+### Adding more branches, a grading example
+
+Try changing `score` above and rerunning, 95, 60, 30, to see each branch fire.
+
+### The most common conditional error
+
+Careful, this cell is broken on purpose: Running it will show the error, that is expected.
+
+`IndentationError`, expected an indented block. Python uses indentation, spaces at the start of a line, to know which lines belong inside the `if`. Forgetting to indent, or mixing tabs and spaces, is the most common conditional mistake. The fix, indent the line under `if` by four spaces, consistently, every time.
+
+### Four real scenarios
+
+**Scenario 1: validating a file extension**. Without this check, the program would try to process every uploaded file identically, including ones it cannot actually handle, and likely crash later instead of rejecting the bad file up front.
+
+**Scenario 2: classifying an AI model's confidence score**. Without a conditional, every prediction would be treated identically, a 31 percent confidence result trusted exactly as much as a 95 percent one.
+
+**Scenario 3: checking password strength**. Without this check, a program would accept any password at all, including ones too weak to protect an account.
+
+**Scenario 4: discount eligibility**. Without a conditional, either every order gets the same discount, or a human has to check every single order by hand.
+
+## 9. Loops: for and while
+
+### What is a loop, and why?
+
+Repeats an action without writing the same code over and over. Recall `fruits` from Section 4.
+
+### Looping with a position, using enumerate
+
+### while loops: repeating until a condition changes
+
+### The most common loop error
+
+This one we will not run, it would freeze the notebook. Look at this code carefully:
+
+```python
+count = 5
+while count > 0:
+    print(count)
+# forgot: count = count - 1
+```
+
+Because `count` is never reduced, `count > 0` is true forever, and the loop never stops. This is called an infinite loop. If this ever happens to you in Kaggle, use the stop button next to the cell, then fix the missing update line.
+
+### Combining a loop with a conditional, using `allowed_extensions` from Section 6
+
+### Real use case: batch-processing a folder of images
+
+Connects to the Computer Vision domain from Week 1. Without a loop, processing four images means copy-pasting the same lines four times, and four thousand images would be impossible to write by hand.
+
+### Real use case: retrying a failed API call
+
+Without a while loop, you could not know in advance how many attempts an unreliable call might need. A while loop keeps trying exactly until it succeeds or gives up, not a fixed number of times decided ahead of time.
+
+### Stopping early with break, skipping with continue
+
+### Coming back to dictionaries: counting word frequency
+
+Needs both a loop, to visit every word, and a dictionary, to keep a running count. Connects to the NLP domain from Week 1.
+
+## 10. Functions
+
+### What is a function, and why?
+
+A named, reusable block of code.
+
+### The most common function error, forgetting to return
+
+Notice `result` printed as `None`, even though the correct total, 7, appeared above it. `print()` only displays a value on screen, it does not hand that value back to whatever called the function. Only `return` does that. Forgetting `return` and using `print()` instead is the most common function mistake, the function looks like it worked, because you saw the right number, but nothing was actually returned to use later.
+
+### Default parameters
+
+### Turning the Section 8 confidence checker into a reusable function
+
+### Returning more than one value, using a tuple from Section 5
+
+## 11. Getting Input From a User
+
+Every example so far used values we typed directly into the code. Real programs usually need to ask a person for information while running. That is what `input()` does.
+
+A note before you continue: The cells in this section use input() for real, so they need you to actually type something. When you run one in Kaggle, it will pause and show a text box. These specific cells are shown here without being run automatically, so this notebook does not sit waiting forever for someone else to type. Run them yourself.
+
+If you ran that and typed `Ali`, you would see `Hello, Ali`. Try it now yourself, click the cell above, run it, and type your own name when it pauses.
+
+### input() always gives you text, even for numbers
+
+This surprises almost everyone the first time.
+
+### The most common input error
+
+`TypeError`, cannot add `int` to `str`. Even though `"25"` looks like a number, `input()` always returns text. The fix, convert it on purpose, with `int()` or `float()`.
+
+## 12. Capstone: Everything From Today, Together
+
+One final program, using a function, a dictionary, a loop, a conditional, and real user input, all at once. This is the student grade checker, it asks how many students there are, collects a name and score for each one using `input()`, and prints a grade for every student using the function pattern from Section 10.
+
+This cell also needs real typing: Shown here without being run automatically, for the same reason as Section 11. Copy it into your own notebook and run it yourself.
+
+If you ran this with 2 students, entering Ali with 85 and Sara with 40, you would see:
+
+```
+--- Results ---
+Ali: 85 -> Grade B
+Sara: 40 -> Grade F
+```
+
+Notice every piece is something you already know on its own: `get_grade` is a function from Section 10, using the same if/elif logic from Section 8. `student_scores` is a dictionary from Section 7. The `for` loop is from Section 9. `input()` and `int()` are from Section 11. Nothing here is new, only combined.
+
+## 13. Key Terms Recap
+
+| Term | One-Line Definition |
+|---|---|
+| Kernel | The running process that remembers everything you have executed in a notebook so far |
+| Variable | A name that points to a value, and can be reassigned |
+| List | An ordered, changeable collection that allows duplicates |
+| Tuple | An ordered, unchangeable collection |
+| Set | An unordered collection of unique values, fast for membership checks |
+| Dictionary | A collection of key-value pairs, looked up by key instead of position |
+| Conditional | Code that runs differently depending on whether something is true or false |
+| Loop | Code that repeats an action across a collection or until a condition is met |
+| Function | A named, reusable block of code |
+| input() | Pauses a program and waits for a person to type a response, always returns text |
+
+### Common Errors, One More Time
+
+| Concept | Most Common Error | Why It Happens |
+|---|---|---|
+| Variables | NameError | A typo, or using a variable before its cell has run |
+| Data types | TypeError | Mixing text and numbers without converting one |
+| Lists | IndexError | Asking for a position beyond the list's length |
+| Tuples | TypeError | Trying to change a value after it was created |
+| Sets | TypeError | Trying to access a set by position, sets have no order |
+| Dictionaries | KeyError | Looking up a key that was never added |
+| Conditionals | IndentationError | Forgetting to indent the lines inside if, elif, or else |
+| Loops | Infinite loop | Forgetting to update the condition inside a while loop |
+| Functions | Returns None unexpectedly | Using print() inside a function instead of return |
+| input() | TypeError | Forgetting that input() always returns text, not a number |
+
+Coming Up Next: Week 2, Day 2 builds on every data structure from today, NumPy arrays and Pandas dataframes are both, underneath, built on the same list-like and dictionary-like thinking you just practiced.

@@ -1,0 +1,1561 @@
+Specification and
+Solution Design
+Week 4, Day 2, Concept Guide
+
+In Day 1 you learned the parts of a requirement. Here you assemble them into a complete
+specification and have another team review it. Then you turn it into a design: which AI task each
+requirement needs, which tool could do it, whether the model should run at the edge or in the cloud,
+and what the architecture looks like.
+Read the guide on your own. Then the class splits into two teams, which solve four tasks on paper
+and review each other's work.
+
+PART A
+
+Drafting the Specification
+How This Day Works
+Step
+
+What Happens
+
+1. Read
+
+Read Parts A and B on your own, at your own pace. Study the tables and the
+worked examples, because the tasks use them.
+
+2. Form teams
+
+The class splits into two teams, Team A and Team B.
+
+3. Solve
+
+Each team solves Tasks 1 to 3 together on paper, in Part C.
+
+4. Swap and review
+
+The teams swap their answers to Tasks 1 and 2 and review each other's work,
+as Task 4 describes.
+
+5. Revise
+
+Each team revises two items using the other team's comments.
+
+1. From Pieces to a Specification
+In Day 1 you learned the parts: how to write a testable requirement, how to tell functional, nonfunctional, and data requirements apart, and how to ask the right questions. This guide puts the parts
+together into a specification, a complete document that a developer could build from and a tester
+could check against, without asking anyone a single question.
+A quick test for any specification is the stranger test. Hand it to someone who was not in the room. If
+they can tell what to build, what 'done' means, and what is out of bounds, it passes.
+Step
+
+What You Produce
+
+1. Choose the application
+
+A task that genuinely suits AI
+
+2. Stakeholders and goals
+
+Who is involved, and what each person wants
+
+3. Problem statement and scope
+
+What the project solves, and where it stops
+
+4. Inputs and outputs
+
+Exact examples of what goes in and what comes out
+
+5. Assembly and review
+
+A complete specification that another team has checked
+
+6. Tools
+
+Each requirement matched to an AI task and a tool
+
+7. Edge, cloud, or hybrid
+
+A decision on where the model will run
+
+8. Architecture sketch
+
+One picture of how data moves through the system
+
+Running Case: The Admissions Document Sorter
+This guide uses one made-up case. A university admissions office in Peshawar receives about
+3,000 application packets each season. Each packet is a PDF or a set of scans containing a
+transcript, an ID card copy, a fee voucher, and a photo. Staff sort every page by hand, which
+takes about 6 weeks, and some pages get misfiled or missed. The office wants a system that
+labels each page and tells staff which applicants are missing a document. All numbers in this
+guide are made up.
+
+2. Choosing the Application
+Not every problem needs AI, and a good specification starts by checking that this one does. Five
+questions help.
+Question
+
+A Good Sign
+
+A Warning Sign
+
+Is the task clear?
+
+One decision, such as 'which kind of
+page is this?'
+
+'Make admissions better'
+
+Does data exist?
+
+Hundreds of past examples with
+known answers
+
+No examples, and no way to label
+any
+
+Can the system be wrong
+sometimes?
+
+A wrong answer is cheap to catch
+and fix
+
+One wrong answer is dangerous or
+cannot be undone
+
+Can success be
+measured?
+
+A target, such as 95 percent correct
+on a test set
+
+'Smarter' or 'more modern'
+
+Is there a simpler way?
+
+Layouts and photos vary too much
+for fixed rules
+
+A form field or a fixed rule would
+solve it
+
+Two applications from the course show what suits AI. A document classifier sorts pages by type. An
+object detector finds things in images, for example cars in a parking camera view. Both work on
+inputs that vary too much for fixed rules, and both can be measured against a test set.
+Most Common Mistake
+Starting with 'let us use AI' instead of 'what problem do we have'. If every page at the
+admissions office came from one fixed form with a tick-box for its type, a simple program
+would do the job, and AI would only add cost and risk.
+
+3. Stakeholders and User Goals
+In Day 1 you listed stakeholders. Here you sort them, because not everyone needs the same
+attention. Two questions place each person on a grid: how much influence do they have over the
+project, and how much does it matter to them?
+
+Where a stakeholder sits tells you how to involve them.
+
+Position
+
+What You Do
+
+Manage closely
+
+Involve them from the start, and check every major decision with them
+
+Keep satisfied
+
+Consult them on the points where they hold a veto, such as security and
+legal rules
+
+Keep informed
+
+Share progress and gather their view, but do not wait on them
+
+Monitor
+
+Check in occasionally, in case their position changes
+
+From Goals to Requirements
+Each stakeholder has goals, which are what they want. A requirement is what the system shall do
+about it. Writing both keeps the reason attached to the requirement, so nobody later asks why it
+exists.
+Stakeholder
+
+Goal (What They Want)
+
+Requirement (What the System Shall Do)
+
+Admissions staff
+
+'I want to stop sorting pages by
+hand.'
+
+The system shall label each page as
+transcript, ID card copy, fee voucher,
+photo, or other.
+
+Admissions staff
+
+'I want to know quickly which
+applicants are missing a
+document.'
+
+The system shall list, for each packet, the
+required document types that were not
+found.
+
+Admissions director
+
+'I want every applicant treated the
+same way.'
+
+The system shall apply the same checks to
+every packet and record each result.
+
+Applicants
+
+'I want my documents kept
+private.'
+
+Only logged-in admissions staff shall be
+able to open application documents.
+
+When Goals Conflict
+The director wants speed, the staff want accuracy, and the legal officer wants documents kept
+inside approved systems. Conflicts are normal. Write both goals down, name the trade-off, and
+ask the person with the authority to decide. Then record the decision.
+
+4. Problem Statement and Scope
+The Problem Statement
+A problem statement is two or three sentences that say who has the problem, what it costs, and what
+success looks like, with numbers wherever possible.
+Fill-in Template
+[Who] currently [does what], which causes [problem] costing [measure]. A successful system
+will [measurable result].
+
+Example: The Admissions Sorter
+Admissions staff currently sort about 3,000 application packets by hand each season, which
+takes about 6 weeks and leaves some pages misfiled or missed. A successful system will label
+at least 95 percent of pages correctly, send no more than 15 percent of pages to staff for
+review, and cut sorting time to under 1 week.
+
+Scope
+Scope draws the boundary: what the project will do, and what it will not. The out-of-scope list is the
+more useful of the two, because it exposes quiet assumptions.
+In Scope
+
+Out of Scope
+
+Labeling each scanned page by type
+
+Deciding whether a transcript meets entry
+requirements
+
+Listing missing documents for each packet
+
+Entering marks into the university database
+
+Sending doubtful pages to staff
+
+Checking whether an ID card is genuine
+
+Recording every result
+
+Reading handwritten application forms
+
+Out of scope does not mean never. It means not in this version.
+Key Insight
+Scope creep is when new requests quietly pile onto a project until it cannot be finished. An
+agreed out-of-scope list gives you a calm answer: that is a good idea, and it belongs in the next
+version.
+
+Assumptions and Constraints
+Type
+
+Meaning
+
+Example
+
+Assumption
+
+Something taken to be true that
+the project depends on
+
+Scans arrive as PDF or image files at 200 DPI or
+higher. Staff will review flagged pages.
+
+Constraint
+
+A fixed limit that comes from
+outside
+
+A budget of Rs 40,000 a month. Ready before
+admissions open in 10 weeks. ID card copies may
+only be processed in systems the university has
+approved.
+
+5. Specifying Inputs and Expected Outputs
+For an AI system, the most valuable part of a specification is exact examples. A phrase like 'label
+each page' leaves room for argument. An example does not. This step has three parts: what goes in,
+what comes out, and worked examples that pin down what correct means.
+
+What Goes In
+Item
+
+Specification
+
+Source
+
+Scans uploaded by staff from the office scanner, and photos taken on phones
+
+Format
+
+PDF (one packet per file), or JPG or PNG (one page per file)
+
+Size
+
+Up to 20 MB per file, and up to 30 pages per packet
+
+Quality
+
+Scans at 200 DPI or higher. Phone photos may be tilted or dim and must still be
+handled.
+
+Volume
+
+About 3,000 packets a season, and up to 300 on the busiest day
+
+Language
+
+English and Urdu text
+
+What Comes Out
+Item
+
+Specification
+
+Per page
+
+Page number, label, and confidence score
+
+Per packet
+
+Document types found, required types missing, and the number of flagged pages
+
+Format
+
+A table on screen, and a CSV export for the records office
+
+Recipient
+
+The staff member who owns the packet
+
+Worked Examples
+Input
+
+Expected Output
+
+A clear scan of an English transcript at 200
+DPI
+
+Label: transcript. Confidence 80 percent or higher, so
+not flagged.
+
+A slightly tilted phone photo of an ID card
+copy
+
+Label: ID card copy. Flagged only if confidence is
+below 80 percent.
+
+A completely black page
+
+Label: other. Flagged as unreadable.
+
+Input
+
+Expected Output
+
+A packet with a transcript and a photo, but no
+fee voucher
+
+Packet result: incomplete, missing fee voucher.
+
+Edge Cases to Always Include
+● Blank or black pages.
+● Pages upside down or sideways.
+● Two documents on one page.
+● A document type the system has never seen.
+● A file in the wrong format.
+
+Key Insight
+Worked examples are requirements too. They define what correct means, and they become
+your first test cases.
+
+6. Assembling the Specification
+Now the pieces go into one document. Use the same skeleton every time, so readers always know
+where to look.
+Part
+
+What It Contains
+
+Built From
+
+1. Problem and goal
+
+The problem statement and success
+measures
+
+The problem statement
+
+2. Scope
+
+What is in, and what is out
+
+The scope lists
+
+3. Stakeholders and goals
+
+Who is involved, and what each person
+wants
+
+The stakeholder table
+
+4. Inputs and outputs
+
+Specifications and worked examples
+
+The input and output tables
+
+5. Requirements
+
+Functional, data, and non-functional
+requirements, each with an ID, a priority, and
+a source goal
+
+The goal-to-requirement
+table, plus new
+requirements
+
+6. Constraints and
+assumptions
+
+Budget, deadline, limits, and what is
+assumed
+
+The assumptions table
+
+7. Open questions
+
+Things still to be decided, each with an
+owner
+
+Anything you could not
+settle
+
+8. Acceptance criteria
+
+How everyone will know the system is done
+
+The success measures
+
+A Short Sample
+Here is the requirements part of a specification for the admissions sorter. The last column traces
+each requirement to the goal it came from, so any requirement can be explained and any goal can be
+checked.
+
+Goal
+
+What the Stakeholder Wants
+
+G1
+
+Stop sorting pages by hand (admissions staff)
+
+G2
+
+Know quickly which applicants are missing a document (admissions staff)
+
+G3
+
+Treat every applicant the same way (admissions director)
+
+G4
+
+Keep documents private (applicants)
+
+ID
+
+Requirement
+
+Priority
+
+Source
+
+FR-01
+
+The system shall label each page as transcript, ID card copy, fee
+voucher, photo, or other.
+
+Must
+
+G1
+
+FR-02
+
+The system shall show a confidence score with each label, and
+highlight any below 80 percent.
+
+Must
+
+G1
+
+FR-03
+
+The system shall list, for each packet, the required document
+types that were not found.
+
+Must
+
+G2
+
+FR-04
+
+A staff member shall be able to correct any label before closing
+a packet.
+
+Must
+
+G3
+
+FR-05
+
+The system shall record every label, confidence score, and staff
+correction.
+
+Should
+
+G3
+
+DR-01
+
+At least 1,000 past pages, 200 of each type, shall be labeled by
+staff before testing.
+
+Must
+
+G1
+
+NFR-01
+
+At least 95 percent of pages in a 500-page test set shall be
+labeled correctly.
+
+Must
+
+G1
+
+NFR-02
+
+No more than 15 percent of pages in the test set shall be flagged
+for review.
+
+Should
+
+G1
+
+NFR-03
+
+A 30-page packet shall be processed within 2 minutes.
+
+Should
+
+G1
+
+NFR-04
+
+Only logged-in admissions staff shall be able to open application
+documents.
+
+Must
+
+G4
+
+NFR-05
+
+Running cost shall stay under Rs 40,000 a month.
+
+Should
+
+Budget
+
+NFR-06
+
+The system shall be available from 8 am to 8 pm during the
+admission window.
+
+Should
+
+Calendar
+
+Open Questions and Acceptance Criteria
+● Open question: can ID card copies be processed by a cloud service? Owner: the university IT
+
+head. To be decided before the design is final.
+
+● Acceptance criteria: the sorter is accepted when it reaches 95 percent on the 500-page test
+
+set, lists missing documents correctly for every packet in a 50-packet staff trial, and the
+admissions director signs off.
+
+7. Peer Review
+You cannot see the gaps in your own writing, because your mind fills them in automatically. A
+reviewer's mind cannot, which is exactly why review works.
+
+How a Review Runs
+Step
+
+What Happens
+
+The author hands over the specification with a one-line summary of what it is for.
+
+The reviewer reads it once without writing anything, then again with the checklist below.
+
+The reviewer writes comments. Each comment points to a line, says what is wrong, and
+suggests a replacement.
+
+The two sides meet. The reviewer explains. The author listens, and asks only: 'what did you
+understand?'
+
+The author revises, and notes which comments were accepted and which were not, with a
+reason.
+
+The Checklist
+#
+
+Check
+
+Ask Yourself
+
+Done
+
+Problem and goal
+
+Is success described in a way that can be measured?
+
+[ ]
+
+Scope
+
+Does it say what is included, and what is not?
+
+[ ]
+
+Stakeholders
+
+Are they identified, and the main ones consulted?
+
+[ ]
+
+Quality of each
+requirement
+
+Is every requirement clear, single, and testable?
+
+[ ]
+
+Input, output, workflow
+
+Are all three covered?
+
+[ ]
+
+Data
+
+Are source, format, volume, labels, and privacy covered?
+
+[ ]
+
+Performance
+
+Do speed and accuracy have numbers and a test method?
+
+[ ]
+
+Security and fairness
+
+Are privacy, access, and fairness covered?
+
+[ ]
+
+Failure behavior
+
+Is it defined for unsure answers, bad input, and outages?
+
+[ ]
+
+Priority and agreement
+
+Are priorities set, and have the stakeholders agreed?
+
+[ ]
+
+Comments That Help
+Weak Comment
+
+Strong Comment
+
+'This is vague.'
+
+'FR-03 says work well. Which layouts, and how well? Suggest: at least 90
+percent correct on 100 invoices.'
+
+'Needs more detail.'
+
+'The input section gives no file size limit. Suggest adding a maximum, such
+as 20 MB.'
+
+'Good job.'
+
+'The out-of-scope list is clear, and it stopped me from assuming handwriting
+was supported.'
+
+The rule: point to the line, say what is wrong, suggest a replacement, and always name one thing
+done well.
+
+Vague Words to Hunt For
+Vague Word
+
+Why It Fails
+
+Replace With
+
+fast, quickly
+
+There is no number
+
+'within 3 seconds for 95 percent of requests'
+
+easy, user-friendly
+
+Easy for whom?
+
+'a new staff member can do it unaided after a
+10-minute demonstration'
+
+secure
+
+There is nothing to check
+
+'only logged-in staff can open documents, and
+files are deleted after 30 days'
+
+accurate, good
+
+There is no measure
+
+'at least 95 percent correct on a 500-page test
+set'
+
+scalable, flexible
+
+Scalable to what?
+
+'handles 300 packets a day now, and 3,000 a
+day within a year'
+
+handle, support
+
+What exactly happens?
+
+Name the action: 'reject', 'convert', or 'label'
+
+etc., and so on
+
+It hides requirements
+
+List every item, or cut the phrase
+
+Most Common Mistake
+Defending the draft. If a reviewer misreads a line, the line is unclear, whatever you meant when
+you wrote it.
+
+PART B
+
+From Requirements to a Design
+
+8. From Requirements to AI Task Types
+A specification says what the system must do. A design says how. The first step from one to the
+other is to ask, for each requirement: what kind of AI task is this, or is it ordinary software?
+Task Type
+
+The Question It Answers
+
+Example
+
+Classification
+
+Which category is this?
+
+Label a page as transcript or fee
+voucher
+
+Detection
+
+What is where?
+
+Find every car in a parking camera
+image
+
+OCR
+
+What does the text say?
+
+Read the total from a scanned invoice
+
+Information extraction
+
+Which fields are in this text?
+
+Pull the name, date, and amount from a
+letter
+
+Speech to text
+
+What was said?
+
+Turn a phone call into text
+
+Text generation
+
+Write a response in words
+
+Draft a reply to a patient message
+
+Prediction on tables
+
+What will this number or category
+be?
+
+Predict which orders will arrive late
+
+Not Every Requirement Needs AI
+Requirement
+
+AI or Ordinary Software?
+
+Task
+
+FR-01: label each page
+
+AI
+
+Classification
+
+FR-02: show confidence, and
+highlight low scores
+
+Mostly ordinary software
+
+Uses the classifier's confidence
+score
+
+FR-03: list missing document types
+
+Ordinary software
+
+A simple rule: required types
+minus types found
+
+FR-04: let staff correct a label
+
+Ordinary software
+
+A screen and a database
+
+FR-05: record every result
+
+Ordinary software
+
+A database table
+
+Key Insight
+In most AI systems the model is one small box. Most of the work is ordinary software around it:
+uploading, checking, rules, storage, and screens.
+
+One Requirement, More Than One Route
+FR-01 can be solved in two ways. You can train an image classifier directly on page images, or you
+can read each page with OCR and classify the text. The choice changes the tools, the data, and the
+risks, so a design should say which route was chosen, and why.
+
+9. Mapping Requirements to Tools
+Once you know the task, you look for a tool. You have met three toolboxes in this course.
+Toolbox
+
+What It Offers
+
+Good When
+
+Watch Out For
+
+Huawei Cloud
+
+EI services: ready-made APIs for
+image, text, speech, and OCR.
+ModelArts: build, train, and deploy your
+own models, including AutoML tools
+such as ExeML. HiLens: run vision
+models on edge devices.
+
+You want managed,
+supported services,
+and your organization
+uses Huawei Cloud
+
+Needs an account,
+and most services
+bill by use
+
+Hugging Face
+
+A hub of open pre-trained models,
+hosted APIs through Inference
+Providers, and Spaces for sharing apps
+
+You want flexibility,
+open models, or a
+quick prototype
+
+Free tiers have
+limits, and some
+large models
+cannot be called
+through a simple
+hosted API
+
+Classical
+machine
+learning
+
+Scikit-learn models such as Decision
+Trees and Logistic Regression, on
+tables of data
+
+Your data is a table,
+and you want
+something small,
+cheap, and
+explainable
+
+Not suited to raw
+images or text
+without extra
+preparation
+
+Three Ways to Get a Model
+Option
+
+What It Means
+
+Labeled Data
+Needed
+
+Effort
+
+Choose When
+
+Hosted API
+
+Send an input, and get a
+result from a ready-made
+model
+
+None beyond a
+test set
+
+Days
+
+The task is common,
+such as OCR or speech,
+and accuracy is good
+enough
+
+Fine-tune
+
+Start from a pre-trained
+model, and train it further
+on your own data
+
+Typically a few
+hundred to a few
+thousand
+examples
+
+Weeks
+
+The task is specific to
+you, such as your own
+document types
+
+Build from
+scratch
+
+Train a new model on your
+own data alone
+
+A very large
+labeled dataset
+
+Months
+
+Almost never. Only for
+rare or research needs.
+
+Key Insight
+Start with the simplest option that could work, and let your test set decide when to move down
+the list. If a hosted API reaches your accuracy target on the test set, you are done.
+
+A Mapping Table for the Sorter
+Requirement
+
+Task
+
+Candidate Tool
+
+Why
+
+Risk
+
+FR-01, FR-02
+
+Classification
+
+Fine-tune an image
+classifier on the office's
+labeled pages, using
+ModelArts (for example
+ExeML) or a pre-trained
+model from Hugging Face
+
+The five page
+types are specific
+to this office, so a
+ready-made API is
+unlikely to know
+them
+
+Needs the 1,000
+labeled pages
+from DR-01
+
+FR-01, FR-02
+(alternative
+route)
+
+OCR, then rules
+
+An OCR service such as
+those in Huawei Cloud EI,
+plus keyword rules
+
+Transcripts and
+vouchers contain
+distinctive words
+
+Poor scans and
+Urdu text may
+lower OCR
+accuracy
+
+FR-03
+
+None, ordinary
+software
+
+A short Python script
+
+It is a simple rule
+
+None
+
+FR-04, FR-05
+
+None, ordinary
+software
+
+A web screen with a
+database
+
+Staff need to
+correct labels and
+see history
+
+None
+
+NFR-04
+
+Hosting and
+access
+
+Hosting in an
+environment the
+university has approved,
+with staff logins
+
+ID card copies are
+sensitive
+
+The open
+question on
+cloud use
+
+10. Edge, Cloud, or Hybrid
+Another design choice is where the model runs.
+
+Option
+
+How It Works
+
+Cloud
+
+The model runs in a remote data center. The device sends its data over the internet
+and gets the result back.
+
+Edge
+
+The model runs on or beside the device that collects the data, such as a camera
+with a small computer attached.
+
+Hybrid
+
+The work is split. Quick, light work happens at the edge, and heavy or long-running
+work happens in the cloud.
+
+The same system can be built three ways. The difference is where the model runs.
+
+Seven Criteria
+Criterion
+
+Points to Edge
+
+Points to Cloud
+
+Speed of response
+
+An instant reaction is needed
+
+A delay of a few seconds is fine
+
+Bandwidth
+
+Large video or image streams, and a
+weak link
+
+Small inputs, and a strong link
+
+Connectivity
+
+The connection may drop
+
+The connection is reliable
+
+Privacy
+
+Raw data should stay on site
+
+Data may be processed off site under
+agreed controls
+
+Cost
+
+One-time device cost, and no per-call
+fees
+
+Little upfront cost, paying as you go
+
+Model size
+
+The model is small enough to fit on
+the device
+
+A large model needs powerful servers
+
+Updates
+
+Harder, because many devices must
+be updated
+
+Easier, because you update one place
+
+HiLens is Huawei's edge AI service: a device that runs vision models next to the camera, deployed
+and monitored from the cloud, used in retail, surveillance, and logistics. The retail goods recognition
+case in this course pairs a camera and a HiLens device with a ModelArts API, which is a hybrid
+design.
+
+A Worked Decision: The Sorter
+Criterion
+
+The Sorter
+
+Leans
+
+Speed of response
+
+Staff upload batches, and a few seconds is fine
+
+Cloud
+
+Bandwidth
+
+Small image files
+
+Cloud
+
+Connectivity
+
+Office internet, which is reliable during working hours
+
+Cloud
+
+Privacy
+
+ID card copies may only go to approved systems
+
+A condition on where
+the cloud may be
+
+Cost
+
+No device to buy, and pay-as-you-go suits a seasonal
+peak
+
+Cloud
+
+Updates
+
+One central system to update
+
+Cloud
+
+Decision
+Cloud, hosted in an environment the university has approved. Edge would add device cost and
+update effort without any benefit here. Privacy does not favor edge or cloud by itself. It sets a
+condition on where the cloud may be.
+
+11. The Architecture Sketch
+An architecture sketch is a boxes-and-arrows picture of how data moves through the system, from
+the moment it arrives to the moment someone uses the result. It is not code, and it fits on one page.
+Part
+
+The Question It Answers
+
+Input source
+
+Where does the data come from?
+
+Preprocessing
+
+What is checked or cleaned before the model sees it?
+
+Model or service
+
+What does the AI part do?
+
+Rules
+
+What ordinary logic runs on the model's output?
+
+Storage
+
+What is saved, and for how long?
+
+Interface
+
+Who sees the result, and how do they correct it?
+
+Monitoring
+
+How will you know if accuracy drops?
+
+The sorter as a sketch. Flagged pages reach staff through the rules and the review screen.
+
+Tips for Drawing
+● Label every arrow with what travels along it.
+● Show where people are involved.
+● Mark the boundary where data must stay inside approved systems.
+● Keep it to one page.
+
+Key Insight
+A sketch you can explain in one minute is a good sketch. If it takes five minutes, the design is
+probably doing too much.
+
+12. Checking the Design Against the Requirements
+A design is only good if it can meet the requirements. Go back through the non-functional
+requirements and ask of each one: can this design meet it, and what is the evidence?
+Requirement
+
+Can the Design
+Meet It?
+
+Evidence or Risk
+
+NFR-01: 95 percent accuracy
+
+Not yet known
+
+Must be measured on the 500-page test set. If
+it falls short, add labeled data or try another
+route.
+
+NFR-02: no more than 15
+percent flagged
+
+Not yet known
+
+Depends on the confidence threshold, so tune
+it on the test set.
+
+NFR-03: 30 pages in 2 minutes
+
+Likely
+
+Classifying a page is fast, but time a real 30page packet to confirm.
+
+NFR-04: staff-only access
+
+Yes, by design
+
+Staff logins on the review screen, and storage
+open only to staff accounts.
+
+Requirement
+
+Can the Design
+Meet It?
+
+Evidence or Risk
+
+NFR-05: under Rs 40,000 a
+month
+
+Unknown
+
+Estimate hosting and per-call costs for 3,000
+packets, and compare the options.
+
+NFR-06: available 8 am to 8 pm
+
+Likely
+
+Managed hosting usually offers this, so
+confirm the provider's terms.
+
+The Decision Record
+Write down what you decided, so the reasoning survives. A decision record needs five lines.
+Line
+
+Example
+
+Decision
+
+Fine-tune a pre-trained image classifier on the office's labeled pages, hosted
+in a university-approved cloud environment.
+
+Options considered
+
+OCR plus keyword rules. A ready-made classification API.
+
+Reason
+
+The five page types are specific to this office, and a fine-tuned classifier can
+learn them directly.
+
+Risk
+
+It needs 1,000 labeled pages, and the cloud approval is still an open question.
+
+Review when
+
+Accuracy on the test set is below 95 percent, or the approval is refused.
+
+Most Common Mistake
+Choosing the tool first. The order is requirements, then task types, then options, then the check.
+When the tool comes first, the requirements quietly bend to fit it.
+
+13. Key Terms Recap
+Term
+
+One-Line Definition
+
+Specification
+
+A complete document a developer can build from and a tester can check
+against
+
+Problem statement
+
+Who has the problem, what it costs, and what success looks like
+
+Assumption and constraint
+
+An assumption is taken to be true. A constraint is a fixed limit from
+outside, such as a budget or a privacy rule.
+
+Worked example
+
+A real input paired with the exact output the system should produce
+
+Traceability
+
+Being able to follow each requirement back to the goal it came from
+
+Hosted API
+
+A ready-made model that you call over the internet
+
+Fine-tuning
+
+Training a pre-trained model further on your own labeled data
+
+Edge, cloud, hybrid
+
+Edge runs the model beside the device, cloud runs it in a remote data
+center, and hybrid splits the work between them
+
+Architecture sketch
+
+A boxes-and-arrows picture of how data moves through the system
+
+Decision record
+
+A short note of what was chosen, why, and the risk
+
+PART C
+
+Tasks: Solve on Paper
+These tasks are solved on paper by two teams, Team A and Team B. No laptop is needed. Each team
+works together on Tasks 1 to 3, with one person writing and everyone contributing. Where a task
+asks for a table, draw it yourselves using the columns named. Your answers do not need to be neat.
+They need to be specific. Task 4 is a review between the two teams.
+● Both teams solve the same case, so the two sets of answers can be compared.
+● All cases are made up. Treat their facts as true, and do not research anything.
+● When you write a requirement, use the word 'shall'.
+● If your team disagrees, write both views, name the trade-off, and let the team decide.
+
+The Case: HardHat Watch
+HardHat Watch is a made-up system for a construction company in Peshawar with 12 building
+sites. The company wants cameras at each site's entrance and work areas, and a system that
+spots workers who are not wearing a hard hat and alerts the site supervisor right away,
+because that worker is at risk at that moment. Several sites have weak mobile internet that
+drops often. The company must not store workers' faces. It has about 2,000 site photos taken
+by safety officers, none of them labeled, and can spend at most Rs 150,000 a month in total.
+TASK 1 OF 4
+
+Start the Spec
+What to do
+● Write a problem statement for HardHat Watch: who has the problem, what it costs, and what
+success looks like. Where the case gives no numbers, invent sensible ones and mark them as
+assumptions.
+● Write an in-scope list and an out-of-scope list, with at least three items in each.
+● Draw a table with the columns Stakeholder, Grid Position, Goal, and Requirement. List at least
+
+four stakeholders. For Grid Position, write manage closely, keep satisfied, keep informed, or
+monitor. For Requirement, write one testable sentence using 'shall'.
+
+Deliverable
+A problem statement, two scope lists, and a stakeholder table with at least four rows.
+
+TASK 2 OF 4
+
+Inputs, Outputs, and Vague Words
+What to do
+● Write an input specification for HardHat Watch with these items: source, format, quality, and
+volume.
+● Write an output specification with these items: what is produced, who receives it, how fast,
+
+and what is shown with it.
+
+● Write two worked examples, each a real input paired with the exact expected output. At least
+
+one must be an edge case.
+
+● Read the flawed paragraph below. Underline every vague word. Then rewrite it as four
+
+testable requirements using 'shall', each with a number or a clear condition.
+
+The Flawed Paragraph
+The system should quickly spot people without proper safety gear in all conditions, and tell the
+right people in an easy way. It should be secure and scalable, and work well at night.
+
+Deliverable
+Input and output specifications, two worked examples, and four rewritten requirements.
+TASK 3 OF 4
+
+From Requirements to Design
+ID
+
+HardHat Watch Requirements (use all four)
+
+R1
+
+The system shall detect any worker not wearing a hard hat in camera images.
+
+R2
+
+The system shall alert the site supervisor's phone within 5 seconds of a detection.
+
+R3
+
+The system shall keep working when a site's internet connection is down.
+
+R4
+
+The system shall give the safety manager a weekly count of alerts for each site, without
+storing workers' faces.
+
+What to do
+● Draw a table with the columns Requirement, Task Type or Ordinary Software, Candidate Tool,
+Why, and Risk. Fill in one row for each requirement. Choose tools from the three toolboxes.
+● Decide whether the system should run at the edge, in the cloud, or as a hybrid. Justify your
+
+choice using at least three of the seven criteria.
+
+● Sketch the architecture on paper. Label every arrow with what travels along it, show where
+
+people are involved, and mark what stays on site.
+
+● Write a decision record with five lines: Decision, Options considered, Reason, Risk, and
+
+Review when.
+
+Deliverable
+A tool mapping table, an edge, cloud, or hybrid decision with reasons, an architecture sketch,
+and a decision record.
+
+TASK 4 OF 4
+
+Peer Review
+What to do
+● Swap your team's answers to Tasks 1 and 2 with the other team.
+● Read the other team's work once without writing. Then read it again using the checklist and
+
+the vague words table from Part A.
+
+● As a team, write three comments. Each must point to a specific line, say what is wrong, and
+
+suggest a replacement. Draw a table with the columns Where, Problem, and Suggested
+Replacement. Then write one thing the other team did well, and say why it works.
+
+● Meet the other team. Your reviewers explain each comment. The authors listen, and ask only:
+
+what did you understand?
+
+● Revise two items in your own team's Task 1 or Task 2 using the comments you received. Write
+
+which comments your team accepted and which it did not, with a reason for each.
+
+Deliverable
+Your team's three comments and one strength for the other team, two revised items, and your
+accept or reject notes on the comments you received.
+
+Coming Up Next
+In Day 3 you write a complete requirement document for a retail analytics system, using
+everything from Days 1 and 2, and present a summary to your peer group.

@@ -1,0 +1,174 @@
+Computer Vision and OCR, From Pixels to a Real Model Call
+Week 3, Day 2 Notebook
+
+---
+
+Yesterday was about text. Today is about images, going deep into how a computer actually sees a picture before ever touching an OCR model, then calling a real one, entirely through Hugging Face, nothing downloaded, nothing installed locally.
+
+Before You Start: One section genuinely needs a live connection to Hugging Face and your own API key. That section is clearly marked. Every other cell today runs and produces real output right now, using only plain Python, Pillow, and NumPy, nothing downloaded.
+
+Instructor: Aimal Khan
+
+## 1. From Text to Images
+
+Yesterday, every input and output was text, turned into tokens, turned into arrays of numbers. Today moves into Computer Vision, a different kind of input, but, as you will see by the end of this notebook, the exact same underlying idea: a model never actually sees a picture, it sees an array of numbers, precisely the way it never actually saw your sentence, only an array of token IDs.
+
+## 2. What Is Computer Vision, Really?
+
+Week 1 defined Computer Vision as one of six AI domains, teaching machines to interpret images and video. That is true, but it hides an important detail, "interpreting an image" is not one single task, it is several different tasks, each answering a different question about the same picture.
+
+| Task | Question It Answers | Example |
+|---|---|---|
+| Classification | What is in this image, overall? | Is this a photo of a cat or a dog? |
+| Detection | Where are the objects, and what are they? | Draw a box around every car in this photo |
+| Segmentation | Exactly which pixels belong to each object? | Outline the precise shape of a tumor in a scan |
+| OCR | What does the text in this image say? | Read the words on a scanned invoice |
+
+Where Today Fits: OCR is one specific Computer Vision task among several, reading text, not recognizing objects or scenes. Everything from here on is building toward that one task specifically, but the foundations, pixels, channels, and how a model processes an image, are shared by all four.
+
+## 3. What Is a Pixel?
+
+A pixel, short for picture element, is the smallest single unit of a digital image, one dot, with one brightness or color value. A digital photo is really just a grid of these dots, usually millions of them, packed closely enough that your eye blends them into a smooth picture.
+
+In an 8-bit image, the most common kind, each pixel's brightness is a whole number from 0, pure black, to 255, pure white, with every shade of grey in between. Let's build a genuinely tiny image, small enough to see every single pixel value directly.
+
+`Shape: (8, 8)`, 8 rows, 8 columns, 64 pixels total, and every single one of those 64 numbers above is a real pixel value, 0 for black, 255 for white. Let's actually look at it as an image, not just numbers.
+
+Every square you see is one number from the array above, rendered as a shade of grey. A real photo works identically, just with millions of pixels instead of 64, far too fine for your eye to see the individual squares, but the underlying structure never changes.
+
+## 4. Grayscale vs Color: Image Channels
+
+Section 3's image needed one number per pixel, brightness alone. A color image needs three numbers per pixel instead, one each for red, green, and blue, usually called RGB. Mixing different amounts of these three produces every color a screen can display.
+
+`Shape: (4, 4, 3)`, this is the key difference from Section 3. A grayscale image is a 2D array, height by width. A color image is a 3D array, height by width by 3, one extra dimension purely for the three color channels. The pixel at row 0, column 0 is `[255, 0, 0]`, full red, nothing else, exactly what pure red looks like in RGB.
+
+Key Insight: A grayscale image of a given size has exactly one third the numbers of a color image of the same size, 2D vs 3D. This is a real, practical reason some older OCR systems convert color scans to grayscale first, less data to process, and for reading plain black text, color rarely adds useful information anyway.
+
+## 5. How a Model Actually "Sees" an Image
+
+Recall Day 1, Section 7, token IDs are just a list of numbers, and that list becomes a NumPy array before anything is sent to a model. Images follow the exact same principle. A model never receives a picture, it receives an array, Section 3's `tiny_image` or Section 4's `color_image`, nothing more mysterious than that.
+
+Key Insight: Text becomes tokens, tokens become an array of numbers. Images become pixels, pixels already are an array of numbers, no separate conversion step needed. Both end up in exactly the same place, a grid of numbers, which is the only thing any model, text or vision, actually computes with.
+
+## 6. How Vision Models Find Patterns
+
+Knowing an image is an array does not explain how a model finds a letter, an edge, or a face inside all those numbers. The classic technique, still a core idea inside modern vision models, is called a filter, or kernel, a small grid of numbers that slides across the image, multiplying and summing as it goes, to highlight one specific kind of pattern.
+
+Let's build a real edge-detection kernel and watch it actually find an edge.
+
+Look closely at the result. Everywhere the image was flat, solid dark or solid light, the kernel produced 0, nothing interesting there. Right at the boundary between dark and light, it produced a large spike, 450, exactly where the real edge sits. This single kernel does one job, finding vertical edges, by design.
+
+### Why did the shape shrink, 8 columns down to 6?
+
+The kernel is 3 pixels wide. Sliding a 3-wide window across an 8-wide row, the window can only sit at positions where all 3 of its columns still land inside the image. Starting at column 0, it covers columns 0, 1, 2. It can slide right until it covers columns 5, 6, 7, the last position that still fits, there is no column 8 to cover after that. That is 6 valid starting positions, 0 through 5. The general rule: `output width = input width - kernel width + 1`, here `8 - 3 + 1 = 6`. Exactly the same logic shrank 6 rows down to 4, `6 - 3 + 1 = 4`. Nothing was lost or deleted, the window simply has nowhere left to go once it reaches the edge.
+
+### What do -1, 0, 1 actually mean, and how does sliding work, mechanically?
+
+`apply_kernel` does exactly this, for every valid position: take the 3x3 patch of the image sitting under the kernel right now, multiply each of those 9 pixel values by the kernel's matching number, directly underneath it, then add all 9 results into one single number. That one number becomes one pixel of the output. Then the window slides one step to the right and repeats, and so on, left to right, top to bottom, until every valid position has been computed, this is literally what the `for i` and `for j` loops in `apply_kernel` are doing.
+
+Now the specific numbers. The kernel's left column is all `-1`, the middle column is all `0`, the right column is all `1`. Multiplying and summing with these specific numbers computes one thing: `(sum of the pixels on the right side of the window) minus (sum of the pixels on the left side)`, the middle column's `0` means the exact center pixels get ignored entirely, only the left-vs-right comparison matters. Sitting over a flat region, left and right are nearly equal, so the subtraction lands near 0, no edge detected. Sitting exactly on a dark-to-light boundary, the right side is much brighter than the left, so the subtraction produces a large positive number, an edge, detected. That is the entire trick, this specific arrangement of -1, 0, 1 is a real, historically well-known pattern for finding vertical edges, not an arbitrary choice.
+
+### Who decided on -1, 0, 1, specifically?
+
+For this demonstration, a human did, by hand, using mathematical reasoning about what pattern of weighted subtraction would respond strongly to an edge. This is exactly how classical, pre-deep-learning Computer Vision worked, researchers hand-designed small kernels like this one for decades, each tuned by hand to find one specific kind of pattern.
+
+### How does this connect to Section 9's training process?
+
+This is the real connection worth sitting with. A real trained Vision model does not get its kernel numbers from a human typing in -1, 0, 1. It starts with kernels full of random, meaningless numbers, and uses exactly Section 9's training loop to find useful ones. Every training image is fed through this exact same sliding, multiplying, summing process, using whatever numbers the kernel currently holds, at that point in training, usually still random early on. The result feeds forward through more layers, eventually producing a prediction. That prediction gets compared to the real, known answer, Week 2, Day 3's loss. Gradient descent then nudges every kernel number, including the ones you see above, very slightly, in whichever direction would have made that prediction a little more correct. The next training image repeats the entire process, with the now slightly-improved numbers. Across millions of images, these numbers drift from random noise into patterns that are actually useful, sometimes rediscovering something close to a classic hand-designed edge detector, sometimes finding stranger patterns no human would have thought to design, but genuinely useful to the model regardless. The sliding-window structure above, 3x3, multiply, sum, is designed by the humans who build the model's architecture. The actual numbers living inside it are learned, not chosen, the direct result of training on data, not instructions typed in by anyone.
+
+Real vision systems, both the old hand-designed kind and the modern trained kind, stack many kernels together, each ending up tuned to a different pattern, edges, corners, curves, and in deeper layers, far more abstract shapes entirely.
+
+### How modern vision transformers extend this idea
+
+Recall Day 1's tokens, DeepSeek reads a sentence as a sequence of token pieces. A Vision Transformer, the architecture behind most modern OCR models, does something strikingly similar with images, it cuts the image into a grid of small square patches, then treats each patch as a kind of visual token, feeding the whole sequence of patches into a transformer exactly like DeepSeek processes a sequence of text tokens. The hand-designed kernels above were the older approach, the newer one lets the model learn its own patterns directly from data, at a scale no human could hand-design.
+
+## 7. What Is DPI, and Why It Matters
+
+DPI, dots per inch, measures how many pixels are packed into each physical inch of a scanned or printed image. A higher DPI means more pixels describing the same physical area, finer detail. A lower DPI means fewer pixels covering that same area, coarser, blurrier detail.
+
+Let's render the exact same text at two different pixel resolutions and see the real difference.
+
+Why This Matters for OCR: The low-resolution version has far fewer pixels actually describing each letter's shape, the curves and gaps that separate an 'e' from a 'c', or an 'o' from a '0', start to disappear once there are not enough pixels left to draw them clearly. A real scanned document below roughly 150 to 200 DPI is a common, genuine cause of poor OCR accuracy, not a flaw in the OCR model itself, simply not enough pixel data to work with.
+
+## 8. What Is OCR, Precisely?
+
+OCR, Optical Character Recognition, converts an image containing text into actual, usable, editable text. That one sentence hides two genuinely separate sub-tasks, almost always worth telling apart.
+
+| Sub-Task | What It Answers |
+|---|---|
+| Text Detection | Where in the image is there text at all? Draws a box around each line or word |
+| Text Recognition | Given one of those boxes, what do the characters inside it actually say? |
+
+Key Insight: Older OCR pipelines often ran these as two completely separate models, one to find text regions, a second to read each one. Modern transformer-based OCR models, the kind Section 10 and 11 use, increasingly do both at once, end to end, detection and recognition handled by a single model in a single pass.
+
+## 9. How Are OCR Models Actually Trained?
+
+Recall Week 2, Day 3, supervised learning means training on examples where the correct answer is already known. OCR models are trained exactly this way, on millions of pairs, an image on one side, the correct text it contains on the other.
+
+### Where that training data actually comes from
+
+Two main sources, usually combined. Real scanned documents, books, forms, receipts, paired with human transcriptions of what they say. And synthetic data, images generated by a computer, rendering random text in random fonts, sizes, rotations, and backgrounds, with the text used to generate it already known perfectly, since the computer wrote it. Synthetic data is far cheaper to produce at massive scale than paying humans to transcribe millions of real documents, and modern OCR training sets lean heavily on it.
+
+### The training loop itself
+
+An image goes in. An encoder, the first half of the model, processes it into a compressed numerical representation, not unlike Section 6's patches. A decoder, the second half, then generates the output text one token at a time, exactly Day 1's token-by-token generation process, except this decoder is conditioned on the image's encoded features rather than only on prior text. Whatever it generates gets compared against the real, known label. The difference between the two becomes a loss value, and the model's internal numbers adjust slightly to reduce that loss, Week 2, Day 3's gradient descent, the same mechanism, same shape, now applied to reading rather than classifying passengers.
+
+This repeats across millions of image-text pairs, which is exactly why modern OCR models are large, and why training one from scratch needs real, sustained GPU time, not something done casually.
+
+## 10. Why Can't We Call OCR Just Like DeepSeek? And the Way Around It
+
+A fair question, Day 1's `chat_completion` call felt simple, one function, any prompt, done. OCR is not usually that simple, and it is worth understanding exactly why.
+
+The Real Reason: Text generation is the single most standardized task in the entire industry, huge backend investment has gone into hosting chat-style models efficiently and uniformly. Vision tasks are far more fragmented. Many of today's best, most accurate OCR models are large vision-language models that Hugging Face's simple hosted API does not support directly, their own documentation states plainly, for several such models, Inference API (serverless) does not yet support transformers models for this pipeline type. Using one of those requires downloading the full model yourself through the transformers library and running it locally, which genuinely does need real disk space and, usually, a GPU, exactly the limitation you were right to be cautious about.
+
+The Way Around It: InferenceClient, the exact same class from Day 1, also has an image_to_text method, for OCR and captioning models that are small and established enough to be hosted on Hugging Face's simple serverless API. TrOCR, from Microsoft, is the classic example, genuinely usable this way. The call ends up looking almost identical to Day 1's chat_completion, nothing downloads to your machine, nothing runs on your own Kaggle instance, the computation happens on Hugging Face's own servers, exactly like every call from yesterday.
+
+## 11. Calling a Real OCR Model via Hugging Face
+
+Run This Yourself: This section needs your own Hugging Face API key and a live connection, neither available while this notebook was being prepared. The code below is correct and ready, copy it into your own Kaggle notebook and run it there.
+
+Same `InferenceClient` as Day 1, same `api_key`, same provider routing. The only real difference is the method, `image_to_text` instead of `chat_completion`, and the input, an image instead of a messages list.
+
+## 12. Reading the Output
+
+TrOCR's response is simpler than Day 1's DeepSeek response. Where Day 1 returned a structured object with `choices`, `message`, and `usage`, an image-to-text call typically returns the recognized text directly, or a small object wrapping just that string, no token usage breakdown, no conversation roles, OCR is a narrower task than open-ended chat, and its output reflects that.
+
+## 13. Why OCR Still Fails Sometimes
+
+Even a well-trained model genuinely struggles with specific, predictable situations, worth knowing before you blame your own code.
+
+| Problem | Why It Breaks OCR |
+|---|---|
+| Skewed or rotated text | Most models were trained mainly on upright text, a tilted photo confuses letter shapes |
+| Low contrast | Light grey text on a white background gives the model little signal to work with |
+| Handwriting | Far more variable than print, every person's handwriting is its own font |
+| Confusable characters | 0 and O, 1 and l and I, rn and m, genuinely ambiguous even to humans sometimes |
+| Low DPI | Section 7's exact problem, not enough pixels to draw a letter's real shape |
+
+## 14. Common Errors
+
+The same categories from Day 1, applied here.
+
+| Error | What It Means | Fix |
+|---|---|---|
+| Authentication error (401) | Token missing, wrong, or expired | Check it was copied in full, regenerate if unsure |
+| Model loading (503) | The backend has not warmed this model up yet | Wait a few seconds, retry, normal on the free tier |
+| Unsupported pipeline type | The specific model you picked is not hosted on the simple serverless API | This is Section 10's exact limitation, switch to a smaller, hosted model like TrOCR |
+
+## 15. Key Terms Recap
+
+| Term | One-Line Definition |
+|---|---|
+| Pixel | The smallest single unit of a digital image, one brightness or color value |
+| Channel | One layer of color information, grayscale has 1, RGB color has 3 |
+| Kernel / Filter | A small grid of numbers that slides across an image to highlight a pattern |
+| DPI | Dots per inch, how many pixels describe each physical inch of a scan |
+| OCR | Optical Character Recognition, converting an image of text into usable text |
+| Text detection | Finding where text is located in an image |
+| Text recognition | Reading what the characters in a detected region actually say |
+| Encoder | The half of a model that turns raw input, image or text, into a numerical representation |
+| Decoder | The half of a model that generates output, often one token at a time |
+| Synthetic training data | Computer-generated examples with a perfectly known correct answer |
+| image_to_text | The InferenceClient method for calling hosted vision-to-text models |
+
+Coming Up Next: Week 3, Day 3 closes the week with requirement analysis, functional and non-functional requirements, and a project planning exercise, bringing together everything from Hugging Face, tokens, and OCR into one real project proposal.

@@ -1,0 +1,253 @@
+Fine-Tuning and
+Generative AI
+Week 6, Day 1, Concept Guide
+
+You have used pre-trained models exactly as they arrived from the Hub. Today you learn the standard
+next step: fine-tuning, the way practitioners adapt a pre-trained model to their own task with their own
+labeled data. You also meet the other great family of AI models: generative AI, which creates new text
+and images instead of sorting inputs into boxes.
+This is a theory day. There is no code to run and nothing to install. Read carefully, study the figures,
+and discuss with your classmates. By the end you can explain what changes inside a model during
+fine-tuning, when to fine-tune and when not to, and how a language model writes text one token at a
+time. Tomorrow you fine-tune for real.
+
+1. Recap: What You Already Know
+In Week 5 you learned to judge a model. You rebuilt the Titanic survival classifier from Week 2
+and measured it with the confusion matrix, accuracy, precision, recall, and F1. You learned that
+a single number like accuracy can lie, and that precision and recall answer different questions.
+In Week 3 you met the other side of AI. You used deepseek-ai/DeepSeek-V3-0324, a pretrained generative model from the Hugging Face Hub, by writing prompts and reading what it
+generated. You used it as-is. You never changed the model itself.
+This week connects the two. You learn how to change a pre-trained model itself, by training it a
+little more on your own data. That is fine-tuning.
+Key Insight
+Week 5 taught you to measure a model. Week 6 teaches you to improve one. Measurement
+first, improvement second: you cannot fix what you cannot score.
+
+2. What Fine-Tuning Is
+Fine-tuning means taking a pre-trained model and continuing its training on your own labeled
+examples. You do not start from zero. You start from a model that already understands
+language, and you teach it your task.
+Think of a readymade suit. It fits most people acceptably, the way you used DeepSeek as-is
+through prompting in Week 3 and got decent answers. Fine-tuning is taking that suit to a tailor:
+small adjustments, and now it fits you. Training from scratch would be weaving the fabric
+yourself: possible, but slow and expensive, and unnecessary when good cloth already exists.
+
+Fine-tuning in one picture: a pre-trained model plus your labeled data, adjusted with a short training run.
+
+Three ingredients, nothing more: (1) a pre-trained model, (2) your labeled examples in the
+format of the task, (3) a short training run with a small learning rate. Tomorrow you will run all
+three on Kaggle.
+
+3. What Actually Changes Inside
+A model’s skill lives in its weights: millions of numbers that decide how it reacts to text. Pretraining set those numbers using huge amounts of text. Fine-tuning nudges them, a little, in the
+direction of your examples.
+
+Small steps on purpose
+Two settings make fine-tuning gentle. First, the learning rate is small: each training step
+changes the weights only slightly, so the model adjusts without forgetting what it knew.
+Second, you train for few epochs. An epoch is one full pass over your data, and a handful of
+passes is usually enough.
+The danger of big steps: if you retrain hard on a small dataset, the model memorizes your few
+dozen examples and forgets general language. Practitioners call this overfitting, and in the
+extreme case catastrophic forgetting. The plain version: shouting a few dozen sentences at a
+student until they forget everything else they knew.
+
+Training from scratch needs far more of everything. Fine-tuning is the small bar in each row.
+
+The Whole Trick
+Fine-tuning works because the model already knows the language. You are only teaching it
+your accent. That is why a small dataset can be enough.
+
+4. When to Fine-Tune, Use As-Is, or Train from Scratch
+Three options. Pick with this table:
+Your situation
+
+Best choice
+
+Why
+
+The pre-trained model already
+scores well enough on your data
+
+Use it as-is
+
+No training cost, no new risks.
+
+It is close but makes steady,
+predictable mistakes on your kind
+of input
+
+Fine-tune
+
+A small dataset and a short run close
+the gap. Example: DeepSeek answers
+well in English but stumbles on your
+Roman Urdu queries.
+
+No pre-trained model fits your
+task, or your data looks nothing
+like its training data
+
+Train from scratch
+
+There is nothing useful to start from.
+Rare in practice.
+
+Notice the middle row is where most real projects live. Pre-trained models are strong
+generalists. Fine-tuning turns them into specialists.
+
+5. Generative vs Discriminative AI
+In Week 5 you measured a discriminative model: the Titanic classifier sorts passengers into
+boxes, survived or not survived. The output is always one of a fixed set of labels. Spam or not
+spam works the same way.
+Generative models do the opposite job: they create new things. A paragraph that did not exist
+before. An image from a description. An answer to a question. DeepSeek, which you prompted
+in Week 3, belongs to this family.
+
+Two families. Discriminative models choose a label. Generative models produce new text.
+
+The two families are not rivals. A shop could use a classifier to route complaints and a
+generator to draft replies. This week you will fine-tune a model yourself, and the ideas transfer
+across both families: generative models are fine-tuned the same way.
+
+6. How a Language Model Writes Text
+A language model writes the way you might finish someone’s sentence: it looks at the words so
+far and guesses the most likely next word. Then it adds that word and guesses again. One word
+at a time, until it stops.
+The unit it predicts is called a token. A token is usually a whole word, sometimes a piece of one,
+like "un" and "happy". For this guide, thinking "word" is close enough.
+
+The model scores every candidate and usually picks a likely one. Same sentence as your Week 3 tokenizer demo.
+
+Two consequences worth remembering. First, the model has no plan for the whole paragraph.
+It only ever picks the next word. Coherent essays emerge from thousands of good local
+guesses. Second, because it picks by probability, the same prompt can give different answers
+on different runs. That is a feature for creativity and a hazard for facts.
+
+7. Prompting vs Fine-Tuning
+For a generative model there are two ways to change its behavior. Prompting means putting
+instructions and examples inside the input. In Week 3 you did this with a system prompt ("You
+are a helpful assistant. Keep answers short.") plus user messages, sent through
+chat_completion. The model itself does not change. Fine-tuning means training the model on
+many examples so the behavior is baked into its weights.
+Prompting
+
+Fine-tuning
+
+What changes
+
+The input
+
+The model’s weights
+
+Training needed
+
+None
+
+Yes, a training run
+
+Data needed
+
+A few examples in the prompt
+
+Tens to thousands of labeled
+examples
+
+Speed to try
+
+Minutes
+
+Hours to days of setup
+
+Best when
+
+The task changes often, or you have
+almost no data
+
+The task is stable and repeated, and
+you have data
+
+You can also combine them: fine-tune a model for your domain, then prompt it for the specific
+job. The same choice exists for every model you have touched: in Week 3 you used DeepSeek
+as-is through prompting, and on Day 2 of this week you will fine-tune a model instead.
+
+8. What Data Fine-Tuning Needs
+Fine-tuning data is a list of input-output pairs in the exact format of the task. To fine-tune a
+generative model like DeepSeek for polite customer replies, each pair is one customer
+message and the ideal reply:
+
+Input
+
+Output
+
+Reply politely to this customer: Where is my order?
+
+Your order is on its way and
+should reach you in two days.
+Thank you for your patience.
+
+Reply politely to this customer: The price on the shelf was different.
+
+You are right to point that out.
+We will charge the shelf price
+and fix the tag today.
+
+Quality beats quantity. Sixty clean, consistent pairs teach more than six hundred sloppy ones.
+Labeling disagreements are the enemy: if two people write different ideal replies for the same
+message, the model learns confusion.
+Your dataset will be small, and that is the point of this week’s demo. Fine-tuning works with
+small data precisely because the model already knows the language. You are teaching it your
+accent, not the language itself.
+Before Day 2
+Start collecting examples now: pairs of inputs and the outputs you wish the model gave.
+Good pairs are the fuel of this week.
+
+9. What Comes Next: Day 2
+Day 2 (hands-on): on Kaggle you take a pre-trained model and fine-tune it on your own labeled
+data. You split the data into train and test, run the short training, watch the loss curve fall, and
+measure F1 before and after on the test split with the metrics from Week 5. Then you save your
+model.
+The Big Picture
+Week 5 gave you the metrics to judge a model. Week 6 turns measurement into
+improvement: fine-tune, measure again, and keep what works.
+
+10. Key Terms
+Term
+
+Meaning
+
+Pre-trained model
+
+A model someone else trained on huge amounts of data, shared for reuse.
+
+Fine-tuning
+
+Continuing a pre-trained model’s training on your own labeled examples.
+
+Weights
+
+The millions of numbers inside a model that hold what it learned.
+
+Learning rate
+
+How big each training step is. Fine-tuning uses a small one.
+
+Epoch
+
+One full pass over the training data.
+
+Discriminative model
+
+Sorts inputs into fixed boxes (labels).
+
+Generative model
+
+Creates new text, images, or other content.
+
+Token
+
+The unit a language model predicts: usually a word or a word piece.
+
+Prompting
+
+Steering a model with instructions in the input, without training.

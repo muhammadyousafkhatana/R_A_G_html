@@ -1,0 +1,762 @@
+Retrieval-Augmented
+Generation (RAG)
+Week 8, Day 1, Concept Guide
+
+In Week 6 you baked knowledge into a model by fine-tuning it. Today you learn the other way: keep
+knowledge outside the model, in documents you control, and hand the model exactly what it needs at
+the moment it answers. That method is called Retrieval-Augmented Generation, RAG for short, and it
+powers support bots, knowledge assistants, and research tools everywhere.
+This is a theory day. There is no code to run and nothing to install. Read carefully, study the figures,
+and discuss with your classmates. By the end you can explain what RAG is, how a question becomes
+an answer through retrieval, and when to reach for RAG instead of fine-tuning. On Day 2 you build a
+working RAG system on Kaggle. On Day 3 you turn it into a full application with a frontend and a
+backend.
+
+1. Recap: What You Already Know
+In Week 6 you fine-tuned DistilBERT on SMS spam data. You started from a pre-trained
+encoder, added a small classification head, and trained with a small learning rate for a few
+epochs. Before fine-tuning, accuracy on the test set was 0.5543. After fine-tuning, it was
+0.991, with an F1 score of 0.9664. The knowledge you taught it went into the model weights,
+and it stays there.
+In Week 3 you used the other kind of model: deepseek-ai/DeepSeek-V3-0324, a generative
+model from the Hugging Face Hub. You used it as-is through prompts, with a system prompt,
+multi-turn messages, and a context window of 128,000 tokens. You never changed the model
+itself.
+In Week 5 you learned to judge a model with the confusion matrix, accuracy, precision, recall,
+and F1. That skill returns at the end of this guide, because a RAG system also needs judging,
+and judging a generated answer is harder than judging a label.
+Today connects all three weeks. Fine-tuning taught a model something permanent. RAG
+answers a different question: what if the knowledge changes, or is private, or you have no
+labeled pairs to train on?
+Key Insight
+Fine-tuning puts knowledge into weights. RAG keeps knowledge in documents and hands it
+to the model at query time. Same goal, opposite address for the knowledge.
+
+2. The Problem RAG Solves
+A language model is frozen in time. Everything it knows comes from its training data, and its
+training data ends at a cutoff date. Ask it about anything newer, and it is guessing.
+It also knows nothing about your data. Your course notes, a company manual, a clinic guideline,
+a shop price list: none of that was in its training data, and for private documents it never should
+be.
+When a model is asked about something it does not know, it usually answers anyway. It
+predicts likely words, not checked facts, so it produces confident answers that are invented.
+Practitioners call this hallucination, and it is the central weakness of using a language model
+alone for factual questions.
+There are two broad solutions. Teach the model, which is fine-tuning, Week 6. Or hand the
+model the information at the moment it answers, which is RAG, today. The rest of this guide is
+about the second one.
+Why Not Just Fine-Tune Everything?
+Fine-tuning needs labeled training pairs, GPU time, and a retraining run every time the
+knowledge changes. For facts that change monthly, or documents you cannot label by
+hand, that price is too high. RAG sidesteps all three.
+
+3. What RAG Is
+Retrieval-Augmented Generation means: retrieve relevant information from an external source,
+add it to the prompt, and let the model generate an answer grounded in that information.
+
+The name, broken down
+•
+
+Retrieval: finding the pieces of your documents that match the question.
+
+•
+
+Augmented: those pieces are added to the prompt, so the prompt carries more than the
+question alone.
+
+•
+
+Generation: the language model writes the answer, using the retrieved pieces as its
+source.
+
+The core idea is where the knowledge lives. In fine-tuning, knowledge lives inside the model
+weights. In RAG, knowledge lives outside the model, in documents you control. The model itself
+stays frozen. Nothing is retrained. When a document changes, you edit the document, and the
+next answer already reflects the change.
+Think of it as an exam. Fine-tuning is a closed-book exam: the student must memorize before
+the exam, and anything learned after the exam does not count. RAG is an open-book exam: the
+student may look things up, then answer from what they found. Open-book exams test finding
+and using information, not memorizing it.
+RAG Is a Method, Not a Model
+A RAG system uses two models working together: an embedding model that finds relevant
+text, and a generative model that writes the answer. You already know both kinds: encoders
+from Week 6, and DeepSeek from Week 3.
+
+4. How RAG Works, End to End
+A RAG system runs in two phases. The first phase happens once. The second happens every
+time someone asks a question.
+
+Phase 1: offline, done once (indexing)
+•
+
+Collect the documents: course guides, manuals, notes, policies. This collection is called
+the knowledge base.
+
+•
+
+Split each document into small pieces called chunks. Section 7 explains why.
+
+•
+
+Turn every chunk into an embedding, a list of numbers that captures its meaning. Section
+5 explains how.
+
+•
+
+Store all the chunk embeddings in a vector store, an index built for similarity search.
+Section 6 explains how it is searched.
+
+Indexing is repeated only when the documents change. Add a document, remove one, edit one,
+then re-index the changed parts.
+
+Phase 2: online, per question (querying)
+•
+
+Embed the question with the same embedding model used for the documents.
+
+•
+
+Search the vector store for the chunks most similar to the question. Take the top few,
+usually 3 or 5.
+
+•
+
+Build an augmented prompt: an instruction, the retrieved chunks as context, and the
+question.
+
+•
+
+Send that prompt to the generative model. It writes the answer from the context.
+
+•
+
+Optionally, show the sources: which chunks the answer came from, so the reader can
+check.
+
+The full RAG pipeline. Indexing happens once, querying happens per question.
+
+One full example
+A student asks: "What is fine-tuning?" The question is embedded and searched. The top
+chunks come back: one defining fine-tuning, one about small learning rates. The augmented
+prompt reads, in skeleton form: "Answer using only the context below. If the context does not
+contain the answer, say you do not know. Context: [chunk 1] [chunk 2] Question: What is finetuning?" DeepSeek answers from those chunks, and the answer can point back to them.
+The Same-Model Rule
+The question and the documents must go through the same embedding model, or their
+vectors are not comparable. This is the same rule as Week 6: the tokenizer must match the
+model. Mixing models breaks the comparison silently, with no error message.
+
+5. Embeddings
+An embedding is a piece of text turned into a list of numbers, called a vector, that captures the
+meaning of that text. Two texts with similar meanings get similar vectors. In the language of the
+field, they land close together in vector space.
+The model that produces embeddings is a transformer encoder, the same family as DistilBERT
+from Week 6. DistilBERT reads text and builds a rich representation of it. An embedding model
+is an encoder trained so that its representations are good for comparison: similar meanings end
+up near each other, different meanings end up far apart.
+
+How many numbers?
+That depends on the model. The small, popular model all-MiniLM-L6-v2 produces 384
+numbers per text. Larger encoders in the BERT family produce 768 numbers. More numbers
+give more room to express meaning, but they also need more storage and more compute. The
+numbers below were computed locally for this guide with all-MiniLM-L6-v2, so each sentence
+became a 384-number vector.
+
+Semantic search vs keyword search
+Keyword search matches exact words. Searching for "car" never finds a document that only
+says "automobile". Semantic search matches meaning, because the vectors for "car" and
+"automobile" point in a similar direction. That is the whole reason retrieval uses embeddings
+instead of word matching.
+
+Real cosine similarity scores from all-MiniLM-L6-v2, rounded to two decimals. Related pairs score clearly higher.
+
+Read the chart carefully. The two related pairs score 0.57 and 0.79, while the unrelated pairs
+score 0.03 to 0.09. The gap is the signal retrieval relies on. Also notice that 0.57 is not near 1.0:
+the cat sentence and the feline sentence mean similar things but share almost no words, so
+their score is moderate. The password pair scores higher partly because the wording overlaps
+more. Similarity ranks candidates, it does not grade them like an exam. A score of 0.57 does
+not mean "57 percent correct".
+What Embeddings Do Not Do
+An embedding does not understand text the way a person does. It places similar texts near
+each other. That is a much smaller claim, and it is enough for retrieval to work.
+
+Why do car and automobile land close together?
+First, a correction: they do not get the same embedding. Same would mean identical numbers,
+and that is false. They get similar embeddings: different vectors that point in nearly the same
+direction. Measured with all-MiniLM-L6-v2, "a car" vs "an automobile" scored 0.90 and "a car"
+vs "a vehicle" scored 0.86, while "a car" vs "a banana" scored 0.37 and "a car" vs "feeling
+happy" scored 0.21. Close, not identical. Scores rounded to two decimals.
+Why close? Embeddings are learned, not assigned from a dictionary. During training, the model
+reads huge amounts of text and learns a simple rule: words that appear in similar contexts tend
+
+to mean similar things. You know a word by the company it keeps. "Car" and "automobile" both
+appear near "drive", "road", "engine", "park", and "fuel". Because their contexts overlap so
+much, training pushes their vectors toward each other. "Banana" appears near "eat", "fruit",
+and "peel", so its vector lands far away.
+The same holds for sentences. The model reads the whole sentence, so "I drive my car" and "I
+drive my automobile" produce similar sentence vectors because nearly every surrounding word
+matches. That is why the cat sentence and the feline sentence in this section scored 0.57:
+similar meaning, different words, so close but not identical.
+
+Real positions of word vectors from all-MiniLM-L6-v2, flattened to 2D for display. Car, automobile, and vehicle cluster
+together; fruit lands far away.
+
+One caution about this picture: real embeddings have 384 dimensions, and this page has 2.
+Flattening 384 dimensions into 2 always distorts some distances. Trust the similarity scores,
+not the exact gaps on the page. The scores are measured in 384 dimensions; the picture is
+only a sketch of them.
+
+6. Similarity and Retrieval
+Cosine similarity
+To compare two vectors, RAG systems usually use cosine similarity. It measures the angle
+between two vectors, and it runs from -1 to 1. A score near 1 means the vectors point in almost
+the same direction, so the meanings are very similar. A score near 0 means they point in
+unrelated directions. A negative score means they point in opposite directions, which is rare for
+ordinary text. Direction matters here, not length: a long sentence and a short sentence can still
+point the same way.
+
+Cosine similarity is about the angle between vectors. Small angle, similar meaning. Large angle, different meaning.
+
+Top-k retrieval
+Retrieval returns the k most similar chunks, called the top-k. A common choice is 3 or 5. More
+chunks give the model more context, but also more noise, and every extra chunk makes the
+prompt longer. Choosing k is a trade-off, and Day 2 lets you feel it by trying different values.
+
+The context window limit
+Retrieved chunks must fit inside the generative model context window. DeepSeek, which you
+used in Week 3, allows 128,000 tokens. That sounds large, but a library of documents is far
+larger, which is exactly why you retrieve the top few chunks instead of sending everything.
+Retrieval is a filter that protects the context window.
+
+The vector store
+A vector store, also called a vector database or index, is a store built for fast similarity search
+over many vectors. FAISS and Chroma are two well known names. For teaching, plain NumPy
+search over a small set of vectors works fine and shows the same idea. The job is identical in
+every case: given a question vector, return the closest chunk vectors, fast.
+
+Is that all? More ways to search
+No. Keyword search and semantic search are the two foundations. Real systems add three
+more ideas on top of them.
+•
+
+Keyword search (BM25): matches exact words and ranks by a standard formula called
+BM25. Rare words count more than common ones, so a match on "fine-tuning" matters
+more than a match on "the". Fast and exact, but blind to synonyms: it never connects
+"car" with "automobile".
+
+•
+
+Semantic search (dense vectors): matches meaning through embeddings, as in this
+guide. Strong on synonyms and phrasing, weak on exact codes: a part number like KX440 has no meaning to match, so vector search can miss it.
+
+•
+
+Hybrid search: runs both methods and combines their rankings into one list, so exact
+matches and meaning matches both count. This is the standard production choice, and
+Day 2 builds it.
+
+•
+
+Reranking: a second stage, not a search method by itself. After retrieval returns, say, 20
+candidates, a second model reads the question together with each chunk and re-scores
+
+them, keeping the best 5. More accurate, more compute, so it only runs on a few
+candidates.
+•
+
+Metadata filtering: restricting search before or after ranking: only chunks from the 2026
+manual, only pages 1 to 10, only the pricing section. Often combined with any method
+above.
+
+Hybrid search: one question, two rankings, one combined list.
+
+Day 2 covers hybrid search and reranking in depth. For today, remember the shape: keyword
+and semantic are the two foundations, and everything else combines them or refines them.
+
+7. Chunking
+Why not embed whole documents? Two reasons. First, token limits: a long document may not
+fit into the embedding model input. Second, blurring: one vector for a whole guide mixes many
+distinct ideas together, so a question about one section retrieves a vector that is about
+everything and nothing in particular.
+A chunk is a small piece of a document: a paragraph, or a few hundred characters. Each chunk
+gets its own vector, so each vector stands for one idea, and retrieval can return exactly the
+idea the question needs.
+Chunks usually overlap: neighboring chunks share a little text at the edges, so a sentence that
+would otherwise be cut in half survives intact in at least one chunk. The exact chunk size and
+overlap are tuning choices, and Day 2 works through them. For today, remember why chunks
+exist: small, single-idea pieces retrieve far better than whole documents.
+
+One long document becomes overlapping chunks, each with its own vector.
+
+Chunking strategies, and when to use each
+Strategy
+
+How it works
+
+When to use it
+
+Fixed-size
+
+Cut text every N characters or tokens,
+with overlap.
+
+Simple default for plain, uniform text.
+Risk: cuts mid-sentence.
+
+Sentence-based
+
+One or a few whole sentences per
+chunk.
+
+Prose, articles, essays where
+sentences are complete thoughts.
+
+Paragraph-based
+
+Each paragraph, or a few, is a chunk.
+
+Guides, reports, web pages where
+paragraphs are the natural unit.
+
+Recursive
+
+Split by a ladder of separators:
+paragraphs, then sentences, then
+words, only splitting further while a
+piece is still too big.
+
+Best general-purpose default. Adapts
+to the document structure.
+
+Structure-based
+
+Split on document structure: headings,
+sections, markdown headers, table
+rows.
+
+Manuals, textbooks, legal docs,
+markdown files with meaningful
+sections.
+
+Semantic
+
+Group sentences by meaning. Start a
+new chunk when the topic shifts.
+
+Long texts where topics drift:
+transcripts, long reports, interviews.
+Costs more, needs embeddings per
+sentence.
+
+Overlapping
+windows
+
+Fixed-size chunks that share text at the
+edges.
+
+Narratives or arguments where a
+thought spans the boundary.
+
+One sizing rule covers all of them: small chunks retrieve precisely but may lack context, large
+chunks carry context but add noise and tokens. Match chunk size to answer size. Short factual
+answers suit smaller chunks. Answers needing a whole section suit larger chunks. There is no
+single best size, and Day 2 tests this by trying more than one.
+
+When related information lands in different chunks
+Suppose a fact you need sits on page 1 and a related fact sits on page 5. After chunking, they
+live in two different chunks, far apart in the document. Does that break RAG? No. Retrieval
+ranks by similarity to the question, not by position in the document. If both chunks match the
+question, both can land in the top-k, even though they are pages apart. The augmented prompt
+is simply the retrieved chunks joined together, so the generator sees both and combines them.
+That is normal and expected.
+
+Distance in the document does not matter. Two distant chunks can both reach the same prompt.
+
+The real risk is different: the question matches one chunk strongly and the other weakly, so the
+second chunk misses the top-k and the answer comes out half complete. Five fixes, from
+simplest to strongest:
+•
+
+Retrieve more: raise k, so weaker matches still make it into the prompt.
+
+•
+
+Overlap and larger chunks: each chunk carries more surrounding context, so a half-fact is
+less likely to be split across a boundary.
+
+•
+
+Parent-document retrieval: search with small chunks for precision, but send the larger
+parent, the whole section or page, as context. Small for finding, large for answering.
+
+•
+
+Contextual chunks: prepend the section heading or document title to every chunk before
+embedding, so a page 5 chunk still carries its section context and retrieves better.
+
+•
+
+Multi-step retrieval: answer in two rounds. The first retrieval answers part one, then a
+follow-up question retrieves part two. Use this when one question truly needs two distant
+facts.
+
+Worked example: one question, two distant facts
+Take a shop handbook as the document. A customer asks: "I bought a cake yesterday and
+want to return it. Is that allowed, and when can I come on Sunday?" Two facts answer it. Page 1
+says the shop opens at 9 in the morning on Sundays. Page 5 says cakes can be returned within
+2 days of purchase if you bring the receipt. After chunking, those facts live in two different
+chunks. Here is how each fix handles it.
+•
+
+Retrieve more: suppose with k set to 3, the Sunday hours chunk ranks first, but the
+refund chunk ranks fifth, so it misses the prompt and the answer covers only the hours.
+Raising k to 5 pulls the refund chunk in, and the answer now covers both parts.
+
+•
+
+Overlap and larger chunks: suppose the refund rule sits at the bottom of page 5, right
+where a chunk boundary falls, so "within 2 days of purchase" lands in one chunk and "if
+you bring the receipt" lands in the next. With larger chunks and overlap, the whole rule
+stays inside a single chunk, and retrieval returns it complete.
+
+•
+
+Parent-document retrieval: the search finds the small chunk "Cakes can be returned
+within 2 days of purchase", but the system sends the whole Returns section as context.
+That section also says "with a receipt" and "cakes only, not custom orders", so the
+answer is complete and does not promise a refund on a custom order.
+
+•
+
+Contextual chunks: each chunk was stored with its section heading prepended, so the
+page 5 chunk reads "Section: Returns Policy. Cakes can be returned within 2 days of
+purchase if you bring the receipt." The heading adds the word "Returns", which matches
+the question word "return", so the chunk ranks higher and makes the top-k on its own
+merit.
+
+•
+
+Multi-step retrieval: round one retrieves the Sunday hours chunk and answers that part.
+The system then asks a follow-up, "What is the return policy for cakes?", retrieves the
+refund chunk, and combines both parts into the final answer.
+
+A related option for structured documents is hierarchical retrieval: retrieve the section summary
+first, then drill into that section chunks. Day 2 demonstrates the parent-document and
+contextual ideas hands-on.
+
+8. The Augmented Prompt and Grounding
+The augmented prompt has three parts: an instruction, the retrieved context, and the question.
+A typical template reads:
+Prompt Template
+"Answer using only the context below. If the context does not contain the answer, say you
+do not know. Context: [retrieved chunks] Question: [user question]"
+The instruction matters. Without it, the model may answer from its own memory even when the
+context says otherwise. With it, the model is told to stay inside the retrieved text. This is called
+grounding: the answer is anchored to facts placed in front of the model, instead of facts the
+model must recall.
+Grounding reduces hallucination, it does not remove it. Two honest limits stay. First, the model
+can still misread the context or blend it with its own memory. Second, if retrieval brings the
+wrong chunks, the answer will be wrong no matter how good the generator is. Garbage in,
+garbage out applies to RAG exactly as it applies everywhere else.
+Grounding also buys something fine-tuning cannot: sources. Because the answer came from
+specific retrieved chunks, the system can show them. The reader can check the answer
+instead of trusting it.
+
+9. RAG vs Fine-Tuning
+This is the comparison that decides real projects. Study the table row by row.
+Fine-tuning
+
+RAG
+
+Where knowledge lives
+
+In the model weights
+
+In external documents
+
+Training needed
+
+Yes, a training run
+
+No, only indexing
+
+Updating knowledge
+
+Retrain the model
+
+Edit or replace documents, re-index
+
+Data needed
+
+Labeled input-output pairs
+
+Raw documents, no labels
+
+What changes
+
+Behavior, tone, format
+
+Nothing in the model, only the prompt
+
+Fine-tuning
+
+RAG
+
+Factual answers
+
+Can still hallucinate
+
+Grounded in retrieved text, can cite
+sources
+
+Cost per question
+
+No extra cost
+
+Retrieval plus longer prompts
+
+Best when
+
+Task is stable, skill or style must be
+baked in
+
+Knowledge changes, is private, or
+needs citations
+
+The core difference in one picture: where the knowledge lives.
+
+When to use which
+•
+
+Use RAG when knowledge changes often, is private, or answers must be checkable
+against sources.
+
+•
+
+Use fine-tuning when you need a behavior, a tone, or a skill baked into the model itself. A
+support bot that must always speak politely in a fixed format is a fine-tuning job.
+
+•
+
+Use both when you need both. A fine-tuned model for your domain, plus RAG for current
+facts, is a common production setup. The two methods are not rivals.
+
+The model roles, tied to your experience
+In Week 6 you fine-tuned a classifier, a discriminative model that sorts inputs into labels. RAG
+uses a different pair: an embedding model that finds text, and a generative model like
+DeepSeek that writes the answer. Different jobs, different models, and now you have touched
+all three kinds.
+
+10. Why We Do RAG, and Where It Is Used
+Why
+•
+
+Private data becomes usable without training on it. Documents stay in your store, not in
+model weights.
+
+•
+
+Changing data stays current without retraining. Edit a document and the next answer
+reflects it.
+
+•
+
+Answers can cite their sources, so readers can verify instead of trusting.
+
+•
+
+No GPU training and no labeled data. A working RAG system can be built in hours, not
+weeks.
+
+•
+
+Transparency: you can inspect exactly which documents an answer came from, which
+makes failures debuggable.
+
+Where
+•
+
+Support bots answering from product docs and policy pages.
+
+•
+
+Question answering over course material, the Day 2 project.
+
+•
+
+Internal knowledge assistants over company wikis and manuals.
+
+•
+
+Research assistants over papers and reports.
+
+•
+
+Shop chatbots answering from a price list and policy documents, instead of memorizing
+prices that change.
+
+11. Limitations
+RAG is powerful, and it has sharp edges. Know them before you build.
+•
+
+Retrieval fails. It can bring the wrong chunks, miss the right ones, or bring too many,
+which drowns the good ones in noise.
+
+•
+
+The model can ignore or misread the context, and answer from memory anyway.
+
+•
+
+RAG does not teach skills or style. A model that writes badly still writes badly, just with
+better facts.
+
+•
+
+Chunk quality decides retrieval quality. Bad splits make bad vectors, and bad vectors
+make bad retrieval.
+
+•
+
+Longer prompts cost more tokens and more time per question than a plain prompt.
+
+•
+
+Privacy cuts both ways: retrieved documents enter the prompt, so a sensitive document
+must never reach the wrong user through retrieval.
+
+•
+
+Evaluation is hard. Week 5 metrics judged a classifier with right or wrong labels. Judging
+a generated answer needs new checks: did retrieval find the right chunks, and is the
+answer faithful to them? Day 2 introduces those checks.
+
+12. Vocabulary and the Map, Plus What Comes Next
+The cast
+•
+
+Knowledge base: the collection of documents the system can retrieve from.
+
+•
+
+Chunk: a small piece of a document, the unit that gets embedded.
+
+•
+
+Embedding: a list of numbers capturing the meaning of a chunk or a question.
+
+•
+
+Vector store: the index that holds chunk embeddings and answers similarity searches.
+
+•
+
+Retriever: the part that finds the relevant chunks for a question.
+
+•
+
+Generator: the language model that writes the answer from question plus context.
+
+•
+
+Prompt template: the fixed structure combining instruction, context, and question.
+
+•
+
+Top-k: the k most similar chunks returned by retrieval.
+
+RAG on the map
+•
+
+Plain prompting: no external context, the model answers from memory alone. Week 3.
+
+•
+
+Fine-tuning: knowledge baked into weights. Week 6.
+
+•
+
+RAG: knowledge retrieved at query time. Today.
+
+•
+
+Agents: systems that can use retrieval as one tool among others, alongside search, code,
+and calculators. Beyond this week, but now you can place them.
+
+What comes next
+Day 2 (hands-on): on Kaggle you build the actual RAG system. You chunk real documents,
+embed them with a Hugging Face model, build the index, retrieve top chunks, build the
+augmented prompt, generate answers with DeepSeek, and test where it fails. Depth topics for
+Day 2: chunking strategies, hybrid search that mixes keywords with vectors, reranking, and
+RAG evaluation.
+Day 3 (application): you integrate that RAG system into a full application with a frontend and a
+backend, run it end to end, and push it to GitHub.
+
+13. Key Terms
+Term
+
+Meaning
+
+RAG
+
+Retrieve relevant text, add it to the prompt, generate a grounded answer.
+
+Retrieval
+
+Finding the chunks most similar to the question.
+
+Embedding
+
+A list of numbers that captures the meaning of a piece of text.
+
+Vector
+
+The embedding itself, a point in vector space.
+
+Cosine similarity
+
+A score from -1 to 1 for how closely two vectors point in the same direction.
+
+Top-k
+
+The k most similar chunks returned by retrieval.
+
+Chunk
+
+A small piece of a document, a paragraph or a few hundred characters.
+
+Overlap
+
+Text shared between neighboring chunks so meaning survives the cut.
+
+Vector store
+
+A store built for fast similarity search over many vectors.
+
+Retriever
+
+The part of a RAG system that finds relevant chunks.
+
+Generator
+
+The language model that writes the answer from question plus context.
+
+Grounding
+
+Giving the model facts in the prompt so it answers from them, not from
+memory.
+
+Hallucination
+
+A confident answer that is made up or wrong.
+
+Knowledge cutoff
+
+The point in time where a model training data ends.
+
+Prompt template
+
+The fixed structure that combines instruction, context, and question.
+
+Fine-tuning
+
+Continuing a pre-trained model training on your own labeled examples.

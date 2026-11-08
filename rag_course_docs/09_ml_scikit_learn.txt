@@ -1,0 +1,298 @@
+Machine Learning and scikit-learn: Train Your First Model
+Week 2, Day 3 Notebook
+
+---
+
+Today we finally train real models. One dataset, the Titanic passenger list, real historical data, is used for every example from here to the end. Every concept still follows the same shape as the last two days, the plain idea first, a comparison against what you already know, then real use. By the end, you will have trained and compared two different models yourself.
+
+Run every cell in order, top to bottom.
+
+Instructor: Aimal Khan
+
+## 1. What Is Machine Learning?
+
+Recall Day 1, Machine Learning is a subset of AI, systems that learn patterns from data instead of following rules a human wrote by hand. Today makes that idea concrete.
+
+Machine Learning happens in two phases.
+
+Training Phase: Show the model many past examples where you already know the correct answer, for us, past Titanic passengers, and whether they survived. The model studies these examples and works out its own patterns connecting the details of a passenger to the outcome.
+
+Prediction Phase: Show the trained model a new example it has never seen, a passenger with no known outcome, and ask it to guess. It applies the patterns it found during training.
+
+Recall Day 1's loan approval example, a symbolic system needs a human to write the rule by hand, deny if income is below X. A machine learning system, like the ones we build today, works out that rule itself, from thousands of past examples, without anyone writing it directly.
+
+## 2. The Three Types of Machine Learning
+
+Not all Machine Learning works the way Section 1 described. There are three broad categories, and today is entirely inside just one of them.
+
+| Type | How It Works | Example |
+|---|---|---|
+| **Supervised** | Learns from labeled examples, past data where the correct answer is already known | Today: predicting Titanic survival from past passengers whose outcome we already know |
+| **Unsupervised** | Finds patterns in data with no labels at all, no correct answer given in advance | Grouping customers into segments based on shopping habits, with nobody telling the model what the groups should be |
+| **Reinforcement** | Learns through trial and reward, taking actions and being told afterward whether that was good or bad | A program learning to play a game by earning points for good moves and losing points for bad ones |
+
+Where Today Fits: Today is entirely supervised learning. class_scores.csv from Day 2 had a pass_fail column, Titanic has a Survived column, both are labels, the answer already known for past data. Unsupervised and reinforcement learning are real and widely used, but they are a different day's topic, not this one.
+
+## 3. Classification vs Regression
+
+Supervised learning itself splits into two flavors, based on what kind of answer you are predicting.
+
+| | Classification | Regression |
+|---|---|---|
+| Predicts | A category | A number |
+| Example today | Survived or Did Not Survive | Not used today, but would be: the exact fare a ticket cost |
+| Also called | A label | A continuous value |
+
+Notice both are technically predictions, prediction is the general umbrella term for anything supervised learning produces, not a third category alongside these two. Whether it counts as classification or regression depends entirely on the shape of the answer, a fixed set of categories, or an open-ended number.
+
+Today is a classification problem, Survived is either 0 or 1, nothing in between.
+
+## 4. The Machine Learning Workflow, Big Picture
+
+Before touching any code, here is the map for the rest of today. Every section from here on fills in one box.
+
+Raw data becomes features and a label, gets split into a training portion and a testing portion, the training portion trains the model, the testing portion evaluates it honestly, and only then does the model predict on genuinely new data. Section 7 explains exactly why that split step exists, it is not optional busywork.
+
+## 5. What Is scikit-learn, and What Isn't It For?
+
+scikit-learn is a library, built on top of NumPy and Pandas, containing ready-made implementations of the most common Machine Learning algorithms. You do not write the underlying math for a decision tree or logistic regression from scratch, you import it and call it.
+
+| Library | What It Actually Does |
+|---|---|
+| NumPy | Math on arrays |
+| Pandas | Loading, cleaning, and manipulating tabular data |
+| **scikit-learn** | **Classical Machine Learning algorithms, plus splitting, encoding, and evaluation tools** |
+| TensorFlow / PyTorch | Deep learning, neural networks, a deliberately different territory |
+
+Key Insight: scikit-learn is not the tool for images, large language models, or GPU-scale training, that is TensorFlow and PyTorch's job. This is not a gap, it is a deliberate boundary. scikit-learn is the classical Machine Learning library, decision trees, logistic regression, and similar algorithms that work well on tabular data like a spreadsheet, exactly what Titanic is.
+
+## 6. Meet the Dataset: Titanic
+
+Real historical data, every passenger who was aboard the Titanic, whether they survived, and details about them, their ticket class, age, sex, fare, and more.
+
+891 passengers, 12 columns. Look closely at `.info()`, `Age` has real missing values, and `Sex` and `Embarked` are text, not numbers, both exactly the kind of issues Day 2 taught you to spot immediately with `.info()`.
+
+`Age` is missing 177 times, about 1 in 5 passengers. `Cabin` is missing 687 times, over 3 out of 4 passengers, far too much to fill in reliably. `Embarked` is only missing twice. These three columns will each need a different decision in Section 9.
+
+### The label we are predicting
+
+549 passengers did not survive, 342 did, a reasonably balanced split, not one massive category swamping a tiny one. That balance matters, a dataset where 99 percent of passengers survived would let a model score 99 percent accuracy by always guessing survived, without learning anything real.
+
+## 7. Overfitting and Underfitting: Why We Split Data
+
+Before writing a single line of training code, this needs explaining, because it is the entire reason for a step you are about to be told to do without question otherwise.
+
+Imagine studying for an exam by memorizing the exact answers to last year's practice test, word for word, instead of understanding the underlying topic. You would score perfectly on that exact practice test, and quite possibly fail the real exam, which asks similar but not identical questions.
+
+Overfitting: A model that memorizes the training data too closely, including its noise and quirks, instead of learning the general pattern underneath. It scores extremely well on data it has already seen, and poorly on new data.
+
+Underfitting: The opposite problem, a model too simple to capture even the real pattern, scoring poorly even on the data it trained on.
+
+Here is the trap: if you only ever test a model on the exact same data it trained on, you cannot tell the difference between real learning and overfitting, both look identical, a high score. The only way to catch overfitting is to test on data the model has genuinely never seen.
+
+That is the entire reason for `train_test_split`, hold back a portion of the data, never let the model see it during training, and use it only afterward, for an honest test.
+
+## 8. How Models Actually Work, One by One
+
+Today trains two different algorithms on the same data, so you can compare them directly. Both are classification algorithms, but they reach a decision in completely different ways.
+
+### Decision Tree
+
+A decision tree is a series of yes/no questions, exactly like Day 1's conditionals, except the model figures out which questions to ask, in which order, and where to split each answer, directly from the training data, nobody writes these questions by hand.
+
+Before reading the tree, one column needs decoding. `Pclass` is the passenger's ticket class, 1st class, the wealthiest, upper decks, closest to the lifeboats, 2nd class in the middle, and 3rd class, the majority of passengers, lower decks, furthest from the lifeboats. `Pclass <= 2?` is really asking one question, was this passenger in 1st or 2nd class, in other words, not in 3rd class, a single number standing in for both wealth and physical location on the ship, both of which affected who reached a lifeboat in time.
+
+Now the full path. The root question is `Sex = female?`, historical accounts of the disaster consistently describe a women and children first evacuation priority, so it is genuinely the single strongest predictor, exactly why the tree asks it first. Follow one path all the way down: a female passenger, in 1st or 2nd class, lands in a `Survived` leaf. Follow the right side instead: a male passenger, under age 10, also lands in `Survived`, again matching that same historical priority, this time for young children regardless of sex. A trained tree can be read almost like a flowchart a human could have written, except every question, every threshold, and every split point came directly from the data itself, nobody told it to ask about `Sex` first, it worked out that was the most useful question on its own.
+
+### Logistic Regression and K-Nearest Neighbors
+
+Two more common approaches, shown side by side. Both diagrams below use simplified, made-up points to illustrate the idea clearly, real Titanic data has 8 columns at once, far more than 2 axes can show on a page.
+
+**Logistic Regression** looks for a single dividing line, or in real data, a more complex boundary, separating one category from the other, then checks which side of that line a new passenger falls on. Despite the name containing regression, it is a classification algorithm, predicting a category, not a number, the name is a historical leftover from the math it is built on.
+
+**K-Nearest Neighbors**, KNN, skips boundaries entirely. To classify a new passenger, it finds the passengers most similar to them already in the data, their nearest neighbors, and takes a majority vote among them. No line, no tree, just, who does this new point most resemble?
+
+Today trains the Decision Tree and Logistic Regression, the two most common starting points, and compares them directly.
+
+## 9. Preparing the Data
+
+### Dropping columns that will not help
+
+Three columns need to go before training anything, and each has its own reason.
+
+`PassengerId` is just a row number, no predictive meaning. `Name` and `Ticket` are almost unique per passenger, a model cannot learn a general pattern from a value that barely repeats. `Cabin` is missing over 77 percent of the time, from Section 6, too sparse to fill in reliably without mostly guessing.
+
+### Handling the missing values that remain
+
+`Age` missing values are filled with the median age, Day 2's `fillna` pattern, applied here with the median instead of the mean since age can be skewed by a few very young or very old passengers. `Embarked` has only 2 missing values, filled with the single most common port, `.mode()[0]`. Every column now shows 0 missing.
+
+### Encoding text columns into numbers
+
+`Sex` and `Embarked` are still text. A model only understands numbers. `Embarked` specifically holds one of three letters, `S` for Southampton, England, `C` for Cherbourg, France, and `Q` for Queenstown, Ireland, the three ports the Titanic stopped at before crossing the Atlantic. A model cannot do arithmetic on the letter `S`, it needs a numeric stand-in for each port.
+
+`pd.get_dummies` replaced `Sex` with a single new column, `Sex_male`, `True` if the passenger was male, `False` if female, and replaced `Embarked` with two new columns, `Embarked_Q` and `Embarked_S`, each `True` or `False`.
+
+Notice only 2 columns came out of 3 possible ports, not 3. `drop_first=True` deliberately drops the first category, `Embarked_C` here, because it is redundant information once the other two exist. If `Embarked_Q` is `False` and `Embarked_S` is `False`, the passenger must have boarded at Cherbourg, there is no other option left, a third `Embarked_C` column would tell the model nothing it could not already work out, while quietly causing a real statistical problem for some models called the dummy variable trap, so it is dropped on purpose, not by accident. The same logic explains why `Sex` became one column, not two, knowing `Sex_male` is `False` already tells you the passenger is female.
+
+### Splitting into features and label
+
+`.drop(columns=["Survived"])` removes just that one column and returns a new DataFrame, `df_model` itself is untouched, the same `.drop()` pattern already used earlier in this section to remove `PassengerId`, `Name`, `Ticket`, and `Cabin`. `Survived` specifically has to be removed from `X`, because `X` is everything the model is allowed to look at while learning, and `Survived` is the answer itself, leaving it in would let the model simply read the answer directly off the page instead of learning to predict it, useless the moment a real new passenger arrives with no `Survived` value at all.
+
+`X`, capital by convention, holds everything the model is allowed to look at. `y` holds only the answer we want it to learn to predict. This is the same features-and-label split every supervised learning problem uses, including yesterday's `class_scores.csv`, if we had trained a model there.
+
+### The train/test split from Section 7, finally
+
+`train_test_split` shuffles the 891 passengers into a random order, then cuts that shuffled list into two pieces. `test_size=0.2` sets where that cut happens, 20 percent held back for testing, about 179 passengers, never shown to the model during training, the remaining 712 go to training. It returns four separate pieces in this exact order, features for training, features for testing, then the matching answers for each, which is why the variable names on the left must be written in that same order, `X_train, X_test, y_train, y_test`, getting the order wrong silently pairs the wrong features with the wrong answers.
+
+`random_state=42` makes the shuffle reproducible, run this cell again and you get the exact same 712/179 split, not a new random one each time, useful for comparing models fairly on identical data. The number 42 itself means nothing special, any fixed number works identically, 42 is just a common convention borrowed from a joke in The Hitchhiker's Guide to the Galaxy.
+
+## 10. Training and Evaluating Model 1: Decision Tree
+
+`.fit()` is where training actually happens, the model looks at every row of `X_train` alongside its matching answer in `y_train`, and works out which questions, at which split points, best separate survivors from non-survivors. `max_depth=4` limits the tree to at most 4 questions deep, a shallow tree like Section 8's diagram, deep enough to learn real patterns, shallow enough to resist memorizing noise, directly related to Section 7's overfitting risk.
+
+`random_state=42` here means something different from the `random_state` in `train_test_split` above, even though it is the exact same parameter name. A decision tree sometimes finds two or more splits that are equally good by its own measurement, and has to pick one, `random_state` controls that internal tie-breaking, so the exact same tree gets built every time this cell runs, not a slightly different one by chance.
+
+`.predict()` runs the trained tree on `X_test`, the 179 passengers it has never seen. `accuracy_score` compares those predictions against the real answers in `y_test` and reports what fraction were correct, around 80 percent, roughly 4 out of every 5 held-out passengers correctly classified, using only what the tree learned from the other 712.
+
+## 11. Training and Evaluating Model 2: Logistic Regression
+
+Same data, same split, a different algorithm.
+
+Same three-line shape as Section 10, on purpose, every scikit-learn model trains this same way. `random_state=42` is set here too, for consistency, but worth being honest about what it actually does with this specific model. Logistic Regression's default solver, `lbfgs`, shown in the print output above, is already fully deterministic on its own, running this cell with `random_state=1` or `random_state=999` produces the exact same trained model either time, unlike the Decision Tree, where it genuinely changes tie-breaking behavior. `random_state` only matters for Logistic Regression with a handful of other solvers that use randomness internally, it is set here mainly as a habit worth having, not because this particular line needs it.
+
+Same `.fit()`, `.predict()`, `accuracy_score` pattern as Section 10, exactly on purpose, every scikit-learn model follows this identical three-step shape, which is precisely why swapping one algorithm for another took only two lines of code.
+
+## 12. Visualizing Results: What Are Plotting Libraries?
+
+Two printed numbers are precise, but a chart is instant, one glance and the comparison is obvious. Before comparing the two models, it is worth knowing the standard tools for this.
+
+| Library | What It Does |
+|---|---|
+| **matplotlib** | The original, most widely used Python plotting library, the foundation almost every other Python plotting tool is built on |
+| **seaborn** | Built on top of matplotlib, produces nicer-looking statistical charts with less code |
+| plotly | Built for interactive, zoomable charts, common in dashboards, not used today |
+
+Key Insight: Just like scikit-learn sits on top of NumPy and Pandas, seaborn sits on top of matplotlib. You will see this layering constantly in Python's data tools, a small set of foundational libraries, with friendlier tools built on top of them.
+
+Today uses matplotlib directly, simple, and available everywhere, including Kaggle with no setup.
+
+`plt.bar()` takes a list of labels and a matching list of heights, one bar per model. `plt.ylim(0, 1)` fixes the y-axis from 0 to 1 on purpose, accuracy is always a fraction between those two values, fixing the axis makes the visual gap between models honest, not exaggerated by an auto-scaled axis.
+
+## 13. Comparing the Two
+
+Key Insight: Logistic Regression edged out the Decision Tree slightly here, close enough that either would be a reasonable choice, exactly what the chart above shows visually. Comparing multiple models on the same test set is completely normal practice, not a sign something went wrong, real projects routinely train several algorithms and keep whichever scores best, or whichever best fits other constraints, like how easily the result can be explained to a non-technical stakeholder, where the tree still wins, you can literally read its questions back.
+
+## 14. Saving Your Trained Model
+
+Training takes time and computing power, `.fit()` on a large real dataset can take minutes, hours, or on the largest models, weeks. You do not want to retrain from scratch every single time you want to use a model. Saving stores everything the trained model learned into a file, so it can be loaded back instantly later, no retraining needed.
+
+`.pkl` is short for pickle, Python's standard format for saving an object to disk exactly as it exists in memory. `joblib` is scikit-learn's recommended tool for this specifically, optimized for objects like trained models that hold large arrays internally. On Kaggle, these files appear in your notebook's output section, downloadable, ready to hand to someone else, or load into a different notebook entirely, without them ever needing to retrain anything themselves.
+
+Why This Matters: This is the exact mechanism behind every deployed AI product you have used. The model that runs when an app recognizes your face or a website recommends a product was trained once, saved, and loaded thousands or millions of times afterward, training and using a model are almost always separate steps, running at separate times, sometimes on entirely different machines.
+
+### How Models Get Imported, Beyond scikit-learn
+
+Today, importing a model meant importing the specific algorithm class directly. That pattern changes once you move beyond classical Machine Learning, worth seeing now, even without running any of it today.
+
+| Category | Import Pattern | Example |
+|---|---|---|
+| Classical ML (today) | Import the specific algorithm class, build it empty, train it yourself | `from sklearn.tree import DecisionTreeClassifier` |
+| Computer Vision | Import a pre-built architecture, often already trained on millions of images | `import torchvision.models as models` then `models.resnet50(pretrained=True)` |
+| Generative AI / LLMs | Load a named model from a shared hub, architecture and trained weights arrive together | `from transformers import AutoModel` then `AutoModel.from_pretrained("bert-base-uncased")` |
+
+Key Insight: Notice the shift. Today, you built an empty model and trained it yourself, on a small dataset, in under a second. Computer Vision and Generative AI far more often start from a model someone else already spent enormous time and compute training, and adapt it, rather than starting from nothing. You will meet this idea again later in this course, it has its own name, reusing an already-trained model instead of training from scratch.
+
+### Model Saving Formats, Beyond .pkl
+
+`.pkl` is genuinely fine for a small scikit-learn model like today's. Larger, real production systems, especially Computer Vision and Generative AI, very often reach for a different format instead, each solving a different problem.
+
+| Format | Used By | Why It Exists |
+|---|---|---|
+| `.pkl` (joblib) | scikit-learn, today's models | Simple, Python-only, saves any object exactly as it sits in memory |
+| SavedModel / `.h5` | TensorFlow, Keras | Bundles architecture and weights together |
+| `.pt` / `.pth` | PyTorch | Usually saves just the learned weights, not the full model code |
+| `.onnx` | Cross-framework | An open format so a model trained in one framework can run in a completely different one |
+| `.safetensors` | Increasingly standard, especially Generative AI | Faster than pickle, and safer, loading a `.pkl` file can silently run arbitrary code, `.safetensors` cannot |
+
+Worth Knowing: A .pkl or joblib file is not just data, it can contain executable code that runs the moment you load it. Never load one from a source you do not trust. This is a real, practical reason the newer .safetensors format exists and is quickly becoming preferred, especially for models downloaded from the internet.
+
+### What Is a Checkpoint, and Why Is It Good Practice?
+
+Today's models trained in under a second, `.fit()` ran once, start to finish, done. Larger models train very differently, in many repeated passes over the data, called epochs, sometimes thousands of them, over hours, days, or weeks. A checkpoint is a saved snapshot of the model's state at some point during that long process, not only at the very end.
+
+Three real reasons this matters:
+
+1. **Protection against crashes.** A power outage or a crash on day 6 of a two-week training run, with no checkpoints, means starting over completely, from zero. With checkpoints, you resume from the last one saved, losing hours, not weeks.
+2. **The last checkpoint is not always the best one.** Recall Section 7, overfitting. A model can genuinely get worse the longer it trains, as it starts memorizing rather than learning. Saving a checkpoint at every epoch lets you go back afterward and pick whichever one performed best on held-out data, not automatically whichever one happened to finish last.
+3. **Comparing training over time.** Checkpoints let you inspect how a model's behavior changed at different stages, useful for understanding, not just recovery.
+
+Why This Matters: Checkpointing is not a niche or advanced trick, it is standard practice for any model that takes real time to train. Today's small models simply never needed it, one .fit() call away from done. The instant training starts taking hours instead of seconds, checkpoints stop being optional.
+
+## 15. Using a Saved Model for a Real Prediction
+
+This is the step that closes the loop, using a model exactly the way a real application would, load once, predict on new data as it arrives.
+
+Notice this cell never touched `tree_model` from Section 10, `loaded_model` came entirely from the file saved in Section 14. As far as this cell is concerned, the training that happened earlier today could have happened on a different machine, a different day, it does not matter, the file has everything the model needs.
+
+Now, a brand new passenger, not from the dataset, made up, exactly like a real user submitting their details to an app.
+
+A 29-year-old female passenger, first class, fare of 100, boarded at Southampton. The loaded model predicts survival, with roughly 99 percent confidence in that specific prediction, consistent with the real historical pattern, first class and female passengers had substantially higher survival rates, which is exactly the kind of pattern a decision tree learns to split on early, back in Section 8's diagram.
+
+`new_passenger` must use the exact same column names, in a DataFrame, that `X_train` was trained on, `Pclass`, `Age`, `Sex_male`, and so on. This is worth remembering as a common real-world mistake, a saved model expects new data to arrive shaped exactly like the data it was trained on, same columns, same encoding.
+
+## 16. Two Common scikit-learn Errors
+
+### Forgetting to encode a text column
+
+`ValueError`, could not convert string to float, `'male'`. `Sex` is still text, exactly Section 9's encoding step, skipped. A model cannot do math on the word `male`, no matter how obvious the pattern seems to a human. This is the single most common scikit-learn mistake for anyone coming straight from Day 2's Pandas work.
+
+### Mismatched row counts between X and y
+
+`ValueError`, number of labels does not match number of samples, 3 rows of features, only 2 answers. `X` and `y` must always have exactly the same number of rows, every feature row needs exactly one matching label, this usually happens after filtering or dropping rows from one but not the other.
+
+## 17. Guided Recap: The Full Pipeline, One More Time
+
+Before the Tasks PDF asks you to do this independently, watch the entire pipeline run start to finish in a single block, everything from Sections 9 through 12, with no new explanation, so the whole shape is visible at once.
+
+Same accuracy as Section 10, because it is the exact same pipeline, just written as one continuous block instead of spread across separate teaching cells. This is genuinely what training a model looks like day to day, load, clean, split, train, evaluate, save, five steps, every time.
+
+## 18. This Same Process, Every Time
+
+Today trained a small Decision Tree on 891 rows and 8 columns. It is worth being honest about what does, and does not, carry over to far bigger systems, a Computer Vision model recognizing faces, or a Generative AI model writing text.
+
+What Stays the Same: The workflow shape from Section 4's diagram: prepare data, split it, train, evaluate, save, predict. That exact sequence, in that exact order, is genuinely how nearly every supervised model gets built, whether it is this small tree or a model with billions of parameters trained on millions of images or the entire internet's worth of text. Load data, hold some back for honest testing, adjust the model based on its mistakes on the training portion, check it on the held-out portion, save the result, then use it.
+
+What Does Not Stay the Same: The math inside .fit() is completely different per algorithm, a decision tree splits data with yes/no questions, a neural network adjusts millions of internal numbers through a process called gradient descent, nothing like what today's tree does internally. Scale differs enormously too, todays training finished in under a second, a large model can take weeks on thousands of specialized chips. And reinforcement learning, from Section 2, genuinely does not fit this shape at all, it has no fixed training set to split, it learns from ongoing trial and reward instead.
+
+So, is the process identical? The big picture shape, yes, almost always, for anything supervised. The engine underneath, the scale, and the hardware, no, those vary enormously. Knowing which parts of today generalize, and which parts do not, is itself a genuinely useful thing to walk away with.
+
+## 19. Key Terms Recap
+
+| Term | One-Line Definition |
+|---|---|
+| Machine Learning | Learning patterns from data instead of following hand-written rules |
+| Supervised learning | Learning from labeled examples where the correct answer is already known |
+| Unsupervised learning | Finding patterns in data with no labels at all |
+| Reinforcement learning | Learning through trial and reward |
+| Classification | Predicting a category |
+| Regression | Predicting a continuous number |
+| scikit-learn | A library of ready-made classical Machine Learning algorithms |
+| Overfitting | Memorizing training data too closely, failing on new data |
+| Underfitting | A model too simple to learn the real pattern at all |
+| train_test_split | Holding back data never seen during training, for an honest evaluation |
+| Decision Tree | A model that learns a series of yes/no questions from data |
+| Logistic Regression | A classification model that separates categories with a boundary |
+| K-Nearest Neighbors | A model that classifies a point by majority vote among its closest neighbors |
+| .fit() | The method that trains a model on data |
+| .predict() | The method that runs a trained model on new data |
+| accuracy_score | The fraction of predictions that matched the real answer |
+| matplotlib | Python's foundational plotting library |
+| seaborn | A plotting library built on top of matplotlib for nicer statistical charts |
+| joblib | scikit-learn's recommended tool for saving and loading trained models |
+| Serialization | Saving a trained model's exact state to a file, so it can be reloaded without retraining |
+| Epoch | One complete pass through the entire training dataset |
+| Checkpoint | A saved snapshot of a model's state at a point during training, not only at the end |
+| Pretrained model | A model already trained by someone else, reused instead of training from scratch |
+| ONNX | An open, cross-framework model format |
+
+Coming Up Next: Week 3 moves from general Machine Learning into Huawei's own Cloud EI APIs hands-on, calling real services, authenticating, and working with live request and response data.

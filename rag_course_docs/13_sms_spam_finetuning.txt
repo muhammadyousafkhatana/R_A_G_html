@@ -1,0 +1,144 @@
+Fine-Tuning a Model on SMS Spam
+Week 6, Day 2 Notebook
+
+---
+
+On Day 1 you learned the theory of fine-tuning. Today you do it for real. You take DistilBERT, a pre-trained model that understands English but has never seen SMS spam, test it first (it guesses like a coin flip), then fine-tune it on 4,457 real SMS messages, and test it again on the same messages. You will see the difference in measured numbers, using the Week 5 metrics.
+
+The cells marked "run on Kaggle" are the live cells: downloading the model, testing before and after, and the training run itself (about 7 to 15 minutes on Kaggle's free GPU). The numbers shown in this notebook come from a real training run done while building it, so you can compare your own results with them.
+
+How To Use This Notebook: Run the cells from top to bottom, in order. Read the markdown cell above each code cell before you run it, because it tells you what to look for in the output. Cells marked run on Kaggle are the ones you run live. Every other cell was executed before this file reached you, and its output is saved below it.
+
+## Part 1. The SMS Data
+
+**Where the data comes from.** We use the SMS Spam Collection, a public research dataset of 5,572 real SMS messages, each labeled ham (a normal message) or spam (junk). Get it into your notebook like this:
+
+1. In your Kaggle notebook, open the right-hand panel and click **Add data**.
+2. Choose **Datasets**, search for **SMS Spam Collection**, open the one by **uciml**, and click **Add**.
+3. The file lands under `/kaggle/input/`. The cell below tries the two usual locations and uses whichever exists.
+4. Using your own file instead? Put its path in `DATASET_PATH` and keep going. Nothing else changes.
+
+Dataset page: https://www.kaggle.com/datasets/uciml/sms-spam-collection-dataset
+
+**What is inside.** The file has 5 columns, but only the first two hold data: the label (ham or spam) and the message text. The other three are empty leftovers from how the file was made, so Step 1 drops them. This is real-world data: messy files are normal, and the first job is always to look at what you actually got. Of the 5,572 messages, 4,825 are ham and only 747 are spam, about 13 percent. That imbalance matters: remember the Week 5 accuracy trap. A lazy model that always answers "ham" scores 86.6 percent accuracy and catches zero spam. That is why we judge with precision, recall, and F1, not accuracy alone.
+
+The dictionary `{0: ..., 1: ...}` at the end counts the labels: 4825 ham, 747 spam. The mapping turns words into numbers because models only understand numbers: ham becomes 0, spam becomes 1.
+
+Five real messages, exactly as strangers typed them, typos and all. The bar chart shows the imbalance: spam is the rare class. Keep that picture in mind when we read the metrics later.
+
+## Part 2. Meet DistilBERT
+
+**What type of model it is.** DistilBERT is a transformer model of the encoder type. An encoder reads the whole message at once and builds an understanding of it, which makes it a natural fit for classification: read the SMS, decide ham or spam.
+
+**What "distilled" means.** BERT is a big, strong model (the teacher). DistilBERT is its smaller student: it was trained to copy the teacher's behavior while being much smaller and faster. Same idea as your Day 1 guide: the student keeps most of the skill at a fraction of the cost.
+
+**What it was trained on.** From its own model card on Hugging Face: the same data as BERT, which is BookCorpus (11,038 unpublished books) plus English Wikipedia. It trained for 90 hours on 8 V100 GPUs. So it understands English very well, but it has never seen SMS spam. That is exactly the "different world" gap from Day 1.
+
+**What "66 million parameters" means.** A parameter is one learned number inside the model. DistilBERT holds 66,955,010 of them. It is **not** 66 million tokens, and it is not 66 million training examples. Tokens are pieces of text (you will meet them in Part 3). The model trained on billions of words, and what it learned from them is stored in these 66 million numbers.
+
+**Where the information goes.** Right now those numbers encode general English. When we fine-tune on SMS spam, the training nudges them, a little, so they also encode spam patterns. After fine-tuning there are still 66 million numbers. The count never changes. Only the values change. That is where your data's information goes: into the weights.
+
+## Part 3. Do We Need a Tokenizer?
+
+**Yes.** The model never sees raw text. It only understands token IDs, which are plain integers. The tokenizer is the translator between your text and the model's numbers. Step 3 runs the exact translator this model was built with.
+
+"Free entry now!" becomes the tokens `free`, `entry`, `now`, `!`, and then the IDs `[101, 2489, 4443, 2085, 999, 102]`. The 101 and 102 are special markers the model expects at the start and end. The vocabulary has 30,522 entries: that is the model's whole dictionary, and every ID is a row in it.
+
+**The tokenizer must match the model.** Each model's vocabulary is its own private dictionary. Feed this model's IDs to a different model and it misreads everything, like reading English with a French dictionary. Rule: always load the tokenizer with the same name as the model.
+
+**What about generative models like DeepSeek?** Also yes, for the same reason on the way in: the prompt must become token IDs before the model can read it. And there is a second trip on the way out: the model generates new token IDs, and the tokenizer turns them back into text you can read. In Week 3 you ran DeepSeek's own tokenizer (`deepseek-ai/DeepSeek-V3-0324`) on "the cat sat on the mat" and saw the same text-to-IDs step. Classifiers use the tokenizer once (in). Generators use it twice (in, and back out).
+
+## Part 4. Before: Test the Untrained Model
+
+DistilBERT understands English, but it has no opinion about spam yet. For classification we bolt a small new layer on top, called the classification head. Its numbers start random. So the 66 million parameters know language, and the tiny head knows nothing. The result: predictions no better than a coin flip.
+
+We split the 5,572 messages first: 80 percent for training (4,457 messages) and 20 percent for testing (1,115 messages the model never trains on). The split is stratified, meaning the 13 percent spam ratio is kept the same in both halves, and seeded, meaning everyone gets the same split.
+
+`max_length=128` cuts messages longer than 128 tokens. SMS are short, so nothing real is lost. Padding fills short messages up to 128 so every batch is a neat rectangle of numbers.
+
+Here is what the real run scored **before** any training, on the 1,115 test messages:
+
+- accuracy: **0.5543**, precision: **0.0492**, recall: **0.1275**, F1: **0.071**
+
+About a coin flip, exactly as predicted. The giant model knows English; the random little head knows nothing about spam. This is our baseline. Everything after this must beat it.
+
+## Part 5. Fine-Tune It
+
+Now the main event. We train all 66 million parameters on the 4,457 training messages. Four settings control the run, and each one is simple:
+
+- **Epochs = 3.** One epoch is one full pass over the training messages. Three passes is enough for this small dataset. (Your friend who suggests 100 epochs gets overfitting: the model memorizes instead of learning.)
+- **Batch size = 16.** The model studies 16 messages, updates its numbers a little, then takes the next 16. Small batches fit on Kaggle's free GPU.
+- **Learning rate = 2e-5.** How big each nudge is: 0.00002. Tiny on purpose, the Day 1 rule. Big steps would wreck the English the model already knows.
+- **Seed = 42.** Fixes the shuffle order so everyone in class gets the same run.
+
+Step 7 runs on Kaggle's free GPU (turn the accelerator on: Settings, Accelerator, GPU). It takes about 7 to 15 minutes. Start it, then read Part 6 while it works.
+
+While it trains, notice what is happening: the same 66 million numbers that knew only general English are being nudged, 16 messages at a time, until they also encode spam patterns. Nothing is added. The values change. That is where your data's information goes.
+
+## Part 6. Read the Loss Curve
+
+**What loss means.** Loss is a single number that says how wrong the model is across the messages it just studied. High loss means bad guesses. Low loss means good guesses. During training the model updates its numbers in whatever direction lowers the loss.
+
+The curve below is from the real run. Loss falls steeply, then keeps creeping down: the model is learning. If the curve had stayed flat, the model would be learning nothing. If it bounced wildly, the learning rate would be too big.
+
+## Part 7. After: Test It Again
+
+Same 1,115 test messages. Same metrics. The only thing that changed is the model's numbers. Step 9 runs the test live; the numbers below are from the real run.
+
+The real run scored **after** fine-tuning:
+
+- accuracy: **0.991**, precision: **0.9664**, recall: **0.9664**, F1: **0.9664**
+
+Compare with before (accuracy 0.5543, F1 0.071). Same messages, same model shape, wildly different skill. The only change is 66 million numbers that now encode spam patterns. Your own run should land close to these numbers; small differences are normal.
+
+Put the two matrices side by side in your head. Before: guesses scattered everywhere. After: almost everything on the diagonal, which is where correct answers live.
+
+### The same inputs, before and after
+
+Three test messages the untrained model got wrong and the fine-tuned model gets right:
+
+| True label | Before | After | Message |
+|---|---|---|---|
+| ham | spam | ham | No message..no responce..what happend? |\n| ham | spam | ham | At WHAT TIME should i come tomorrow |\n| ham | spam | ham | Come to my home for one last time i wont do anything. Trust me. |
+
+This is the moment from your plan: the same input, a visibly improved outcome, because the model's numbers changed.
+
+## Part 8. Save Your Model
+
+The trained model lives in `./sms-spam-model` (saved at the end of the training cell). Two files matter: the weights (the 66 million tuned numbers) and the tokenizer files (the matching dictionary). Keep them together: a model loaded with the wrong tokenizer misreads everything, Part 3's rule.
+
+## Part 9. Check Yourself
+
+1. Why does the untrained model score about 50 percent on the spam test set, even though DistilBERT "understands English"?
+2. What is the difference between a parameter and a token?
+3. Why must the tokenizer match the model? What goes wrong otherwise?
+4. Your friend says "train for 100 epochs to reach 100 percent accuracy." What is wrong with this plan?
+5. The fine-tuned model is judged by F1, not accuracy alone. Why does accuracy alone tell a weaker story on this dataset?
+
+## Summary
+
+- You loaded 5,572 real SMS messages from Kaggle and saw the 13 percent spam imbalance.
+- You met DistilBERT: a distilled transformer encoder, 66 million parameters, trained on BookCorpus plus English Wikipedia.
+- You learned why a tokenizer is needed for classifiers and for generators like DeepSeek, and that tokenizer and model are a pair.
+- Before fine-tuning, the model guessed like a coin flip (F1 0.071). After 3 epochs on 4,457 messages, it scores F1 0.9664 on the same test set.
+- The loss curve fell, the confusion matrix moved to the diagonal, and the same example messages flipped from wrong to right.
+- Fine-tuning changed no count of parameters, only their values. That is where the SMS information went.
+
+## Key Terms Recap
+
+| Term | Meaning |
+|---|---|
+| Fine-tuning | Continuing a pre-trained model's training on your own labeled data |
+| DistilBERT | A small, fast transformer distilled from BERT; 66M parameters |
+| Parameter (weight) | One learned number inside the model; training changes their values |
+| Token | A piece of text (word or word part) the model actually reads |
+| Tokenizer | Converts text to token IDs and back; must match the model |
+| Vocabulary | The tokenizer's dictionary; 30,522 entries here |
+| Classification head | The small new layer on top that outputs the label; starts random |
+| Epoch | One full pass over the training data (we used 3) |
+| Batch size | Messages studied per training step (we used 16) |
+| Learning rate | How big each training nudge is (we used 2e-5, tiny on purpose) |
+| Loss | A number saying how wrong the model is; falling loss means learning |
+| Ham / spam | Normal message / junk message; our two labels |
+| Stratified split | Train/test split that keeps the label ratio the same |
+| Seed | A fixed random starting point so everyone gets the same split and shuffle |

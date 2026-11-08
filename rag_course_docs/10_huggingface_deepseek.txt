@@ -1,0 +1,224 @@
+Hugging Face, Tokens, and Your First Generative Model Call
+Week 3, Day 1 Notebook
+
+---
+
+Today moves from Huawei's own tools to the wider world of AI APIs, using Hugging Face as the door in. By the end, you will understand exactly how a piece of text you type turns into a request, travels to a model, and comes back as a real response, and you will have called a real generative model yourself.
+
+Before You Start: A few cells today genuinely need a live internet connection to Hugging Face and your own API key, something this notebook cannot reach while being prepared. Those specific cells are clearly marked, written correctly, and ready to run the moment you add your own key. Everything else runs and produces real output right now, exactly like every previous notebook.
+
+Instructor: Aimal Khan
+
+## Quick Recap: Your First Two Weeks
+
+Before today, here is everything covered so far, in one place.
+
+### Week 1: AI Foundations and the Huawei Ecosystem
+
+| Day | Covered |
+|---|---|
+| Day 1 | What AI actually is, weak, strong, and general AI, AI vs Machine Learning vs Deep Learning, the history of AI, symbolic AI vs Machine Learning AI, the six AI domains, the five-layer AI industry stack, current trends, adoption barriers, the Gartner Hype Cycle |
+| Day 2 | Huawei's full-stack, all-scenario AI strategy, Cloud EI services (Vision, NLP, Speech, OCR), ModelArts, HiLens, Ascend and Atlas hardware, Pangu models, mapping real use cases to Huawei services |
+| Day 3 | Week 1 recap, the HCCDA-AI exam structure and study strategy, AI career paths, a group debate on AI hype vs reality |
+
+### Week 2: Python, Data, and Machine Learning
+
+| Day | Covered |
+|---|---|
+| Day 1 | Kaggle notebooks, variables and data types, lists, tuples, sets, dictionaries, conditionals, loops, functions, user input, and the most common error for each concept |
+| Day 2 | NumPy arrays, indexing, broadcasting, reshaping, Pandas DataFrames, filtering, missing data, sorting, grouping |
+| Day 3 | Machine Learning with scikit-learn, supervised vs unsupervised vs reinforcement learning, classification vs regression, overfitting, train/test split, training and comparing a Decision Tree and Logistic Regression on the Titanic dataset, plotting results, saving and loading models, predicting on new data |
+
+Why This Recap Matters: Today leans directly on Week 2's Python skills, and on Week 1's understanding of Huawei's broader AI ecosystem, this is the same journey, moving from general AI concepts, to general Python and Machine Learning skills, to calling real AI models over an API. Nothing below assumes you remember every detail, but it does assume the shape of all of this is familiar.
+
+## 1. What Is Hugging Face?
+
+Hugging Face is a hub, a shared platform where people upload and share pretrained models and datasets, so nobody has to train the same kind of model from scratch. Recall Week 2, Day 3's table on how models get imported by category, the Generative AI row already named this exact pattern: load a named model from a shared hub, architecture and trained weights arrive together.
+
+Hugging Face hosts three main things.
+
+| What | What It Actually Is |
+|---|---|
+| Models | Pretrained AI models anyone can use, text generators, image generators, translators, and more |
+| Datasets | Ready-to-use data, often the exact data a model was trained on |
+| Spaces | Small live demo apps, so you can try a model in your browser before writing any code |
+
+Why This Matters: Almost every open-source AI model released today gets uploaded to Hugging Face within days, sometimes hours. It has become the closest thing the AI industry has to a shared library, the same role GitHub plays for code.
+
+## 2. Model Cards: How You Actually Pick a Model
+
+Before calling any model, you need to know it exists and how to talk to it. Every model on Hugging Face has a model card, a documentation page that comes with it.
+
+A model card tells you:
+
+- What task the model does (text generation, translation, image classification, and so on)
+- Its license, whether you are actually allowed to use it, including commercially
+- Example code showing exactly how to call it
+- Its size, requirements, and known limitations
+
+Key Insight: You do not need to understand how a model works internally to use it. The model card tells you exactly what to send it and what you will get back, the same way a product's instructions tell you how to operate it without explaining the engineering inside.
+
+Today's model, decided in advance so you are not stuck choosing: `deepseek-ai/DeepSeek-V3-0324`, a large, capable, general-purpose text generation model, and the exact example Hugging Face's own documentation uses to teach this same workflow.
+
+## 3. Getting Your First API Key, Step by Step
+
+Do This Once, Outside This Notebook: These steps happen in your browser, on huggingface.co, not in a code cell. Follow them once, then come back here.
+
+1. Go to **huggingface.co** and sign up, using your email, or a Google or GitHub account. If you already have an account, just log in.
+2. Click your **profile avatar**, top-right corner of the page.
+3. Click **Settings** from the dropdown.
+4. In the left sidebar of the Settings page, click **Access Tokens**.
+5. Click **Create new token**.
+6. Choose the **Read** token type, enough for calling models. Give it a name, for example `akti-course`.
+7. Click **Create token**.
+8. A token starting with `hf_` appears, shown only this one time. **Copy it immediately** and store it somewhere safe, you cannot view it again later, only create a new one.
+
+Key Insight: Treat this token exactly like a password. It proves the requests below are yours, and yours alone, so keep it private the same way you would a real password.
+
+`getpass()` works like `input()` from Week 2, Day 1, it pauses the notebook and waits for you to type something, but it masks what you type, nothing appears on screen while you paste your token in, not even dots. It is the standard tool for exactly this situation, typing something secret into a notebook. Note this hides the token from view, it does not hash it, the real value is still stored in `HF_TOKEN` afterward, hashing would scramble it irreversibly and make it useless for actually authenticating.
+
+## 4. What Is API Authentication?
+
+Authentication is how a server checks who is actually making a request, before doing anything else. Your API key is a digital ID card, proof that a request genuinely comes from your account, not a stranger's.
+
+Servers require this for real reasons:
+
+- **Security**, so random strangers cannot use a service pretending to be you
+- **Usage tracking**, so a platform knows how many requests each account is making
+- **Rate limits and billing**, so free and paid usage can be measured and controlled fairly
+
+Key Insight: Every API you will ever call in a real job, Huawei Cloud EI, OpenAI, Hugging Face, all of them, requires authentication in some form. The exact mechanism differs slightly, but the idea never changes, prove who you are before the server does any work for you.
+
+## 5. Anatomy of a Real API Call
+
+Every API call to a hosted model has the same basic shape, regardless of provider.
+
+Breaking this down:
+
+- `provider="auto"` is new to Hugging Face specifically. Rather than running every model on its own servers, Hugging Face now routes your request to one of several backend providers, DeepInfra, Novita, Featherless, and others, that actually host the model. `"auto"` means, pick a working one for me, you rarely need to choose manually.
+- `model` names exactly which model to use, copied straight from its model card.
+- `messages` is a list of role and content pairs, covered next.
+- `max_tokens` and `temperature` are two of the most common parameters, covered in Sections 9 and 10.
+
+## 6. The System and User Roles
+
+The `messages` list above used one role, `"user"`. Most generative APIs, Hugging Face included, actually support three.
+
+| Role | What It's For |
+|---|---|
+| `system` | Sets the model's behavior and personality, set once, usually first |
+| `user` | What the person actually asks or says |
+| `assistant` | The model's own previous reply, used to build conversation history |
+
+Key Insight: A conversation is really just a growing list of these three roles, system, user, assistant, user, assistant, and so on. Every single call resends the whole list, which connects directly to Section 14, the model has no memory of its own.
+
+## 7. What Is a Token?
+
+A token is a small chunk of text, a model's actual unit of reading and writing. Not quite a full word, not quite a single letter, usually somewhere in between.
+
+### Why does a model need tokens at all, why not just read letters, or whole words?
+
+Two real problems, solved at once.
+
+- **Whole words alone do not work.** English has hundreds of thousands of words, before even counting names, typos, slang, and every other language. Giving every possible word its own number would need an impossibly huge vocabulary, and the model would still fail the moment it met a word it had never seen.
+- **Single letters alone are wasteful.** You could tokenize by letter, only 26 symbols needed, but then a single sentence turns into hundreds of tiny pieces, the model would have to work far harder to find any meaning, and every number in Sections 9 and 10 gets far more expensive for no real benefit.
+
+Tokenization sits in between. A tokenizer is trained ahead of time on huge amounts of text, and learns a fixed vocabulary, typically 50,000 to 150,000 pieces, of whatever chunks show up often enough to be worth their own symbol. Common whole words like "the" or "cat" usually get one token each. Rare or unusual words get broken into a few smaller familiar pieces instead, still readable, never impossible.
+
+### How does it actually break your text down?
+
+Given a sentence, the tokenizer scans it and matches the longest pieces it already knows, from its trained vocabulary, left to right, until the whole sentence is covered. Common words become single tokens. An uncommon word gets split into the largest chunks the tokenizer recognizes, then whatever is left gets split further, down to individual letters if it has to.
+
+Run This Yourself: Loading a real tokenizer downloads real files from Hugging Face, something this notebook cannot reach while being prepared. The code below is the exact pattern from DeepSeek-V3-0324's own model card, copy it into your own Kaggle notebook and run it there.
+
+Common English words like "the", "cat", and "sat" will almost certainly come back as single whole tokens, exactly the pattern described above, the tokenizer already learned these are common enough to deserve their own symbol.
+
+### Token IDs are just an array of numbers, connecting back to Week 2
+
+Notice `token_ids` above is a plain list of whole numbers, nothing more exotic than that. This is exactly the kind of data Week 2, Day 2 spent an entire day on, NumPy arrays. Once tokenization is done, that list is what actually gets converted into an array, or its close relative in deep learning, a tensor, before anything is sent to the model. Let's prove that connection directly with real code, using a small stand-in list so this cell can run right now, without needing Hugging Face at all.
+
+Key Insight: This is the honest answer to how your input reaches the model, in the form of arrays. A sentence becomes a list of token IDs, that list becomes an array, one number per token, and that array of numbers is the only thing the model itself ever actually processes. Everything the model appears to understand about language, it learned by finding patterns across arrays exactly like this one, at a scale of billions of examples.
+
+## 8. How Your Input Actually Reaches the Model
+
+Your text never reaches the model directly. The tokenizer converts it into token IDs, plain numbers, and only those numbers are what the model actually processes. Whatever comes back is also just numbers, output token IDs, converted back into readable text by a detokenizer on the way out. Section 7's toy tokenizer did a simplified version of exactly the first arrow in this diagram.
+
+## 9. Context Window
+
+The context window is the maximum number of tokens a model can hold in its attention at once, your system prompt, the full conversation history, and the response it is about to generate, all counted together.
+
+`deepseek-ai/DeepSeek-V3-0324` has a context window of up to 128,000 tokens, roughly 90,000 to 100,000 English words, though the exact number served can vary slightly depending on which backend provider Section 5's `provider="auto"` happens to route your request to.
+
+Key Insight: A bigger context window is not automatically better. Stuffing irrelevant text into it wastes tokens, which cost money and can genuinely confuse a model. Relevant and concise beats long and exhaustive, the same principle whether you are working with 4,000 tokens or 128,000.
+
+## 10. Token Limits
+
+`max_tokens` from Section 5's code sets the other half of the budget, the maximum length of the response itself. Once the model reaches that many tokens, it stops immediately, even mid-sentence, mid-word if needed.
+
+The Most Common Token Limit Mistake: Setting max_tokens too low and getting a response that cuts off abruptly, looking broken, when really it is just the length limit being hit exactly as instructed. If a response looks unfinished, check max_tokens before assuming something went wrong.
+
+## 11. Temperature: Controlling Randomness
+
+Temperature controls how random or predictable a model's word choices are. Recall `random_state` from Week 2, Day 3, a similar idea, controlling randomness in a system, just applied here to what the model says next rather than how a tree splits data.
+
+| Temperature | Behavior | Best For |
+|---|---|---|
+| 0 | Always picks the most likely next word, repeatable | Factual answers, code, data extraction |
+| 0.5 to 0.7 | Balanced, mostly sensible with some variation | General conversation, explanations |
+| 1.0 and above | More surprising, creative, occasionally incoherent | Brainstorming, creative writing |
+
+Key Insight: At temperature 0, the exact same prompt returns the exact same words nearly every time. At temperature 0.7 or higher, the same prompt can return slightly different wording each run, direct, visible proof that a model's output is probabilistic, not fixed, the same underlying idea Day 1's random.random() demonstrated for a coin flip back in Week 2.
+
+## 12. Calling a Real Generative Model
+
+Everything above has been building toward this. Run the cell below yourself, with your own token from Section 3, to see it for real.
+
+Run This Yourself: This cell needs your real HF_TOKEN and a live connection to Hugging Face, neither available while this notebook was being prepared. The code is correct and ready, copy it into your own notebook and run it there.
+
+## 13. Reading the Model's Output
+
+The API does not just return text, it returns a structured object with useful metadata alongside it.
+
+Inside that structure, the two parts worth knowing now:
+
+- `response.choices[0].message.content`, the actual generated text, what Section 12 printed
+- `response.usage`, a breakdown of `prompt_tokens`, `completion_tokens`, and `total_tokens`, literally what you are billed for, or what counts against a free tier limit
+
+The API you called already handled the last step of Section 7's pipeline for you, converting the model's own output array of numbers back into the readable text sitting in `response.choices[0].message.content`. That conversion, array of output token IDs back into words, always happens somewhere, whether it is hidden inside a hosted API like this one, or done by hand when working with a model directly, exactly what `tokenizer.decode(...)` would do if run in reverse on Section 7's `token_ids`.
+
+## 14. The Model Has No Memory Between Calls
+
+This is the single most common misconception about generative AI, and worth stating directly: the model is stateless, it does not remember you, or anything you said, between separate API calls.
+
+Key Insight: Every chatbot that appears to remember a conversation is not actually remembering anything inside the model. Your code, or the app you are using, stores the growing messages list from Section 6 and resends the entire thing, system, every past user message, every past assistant reply, on every single new call. Memory is an illusion created by resending history, not something the model itself holds onto.
+
+The model answers the second question correctly only because your own code appended the first exchange into `conversation` and resent all of it. Delete that append line and the model would have no way to know your name at all.
+
+## 15. Common Errors
+
+Three you are likely to see, in order of how often they actually happen.
+
+| Error | What It Means | Fix |
+|---|---|---|
+| Authentication error (401) | Your token is missing, wrong, or expired | Check the token was copied fully, generate a new one if unsure |
+| Rate limit error (429) | Too many requests sent too quickly for your account tier | Wait, then retry, or reduce request frequency |
+| Model loading (503) | The specific backend provider has not warmed this model up yet | Wait a few seconds and retry, this is normal on the free tier, not a bug in your code |
+
+Worth Knowing Before Class: The 503 model loading error is a genuine, well-known quirk of free-tier inference, it usually resolves itself within 10 to 30 seconds on a retry. It is not a sign anything in the code is wrong.
+
+## 16. Key Terms Recap
+
+| Term | One-Line Definition |
+|---|---|
+| Hugging Face | A shared hub for pretrained AI models and datasets |
+| Model card | A model's documentation page, what it does and how to call it |
+| API key | A digital ID card proving a request genuinely comes from your account |
+| Authentication | The process of verifying who is making a request |
+| Token | A small chunk of text, a model's actual unit of reading and writing |
+| Context window | The maximum tokens a model can hold in attention at once |
+| max_tokens | The maximum length of a model's response |
+| Temperature | A setting controlling how random or predictable a model's output is |
+| System role | A message setting the model's behavior, set once, usually first |
+| Stateless | The model remembers nothing between separate API calls on its own |
+
+Coming Up Next: Week 3, Day 2 stays hands-on with real API calls, this time Huawei Cloud EI's OCR service, extracting real text from real images, alongside prompting techniques, chain-of-thought reasoning, and streaming responses.
